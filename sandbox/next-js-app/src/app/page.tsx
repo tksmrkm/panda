@@ -1,4 +1,5 @@
 import { styled } from '../../styled-system/jsx'
+const test = 'bla'
 
 const One = styled.div`
   display: flex;
