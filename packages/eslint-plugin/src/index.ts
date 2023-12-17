@@ -2,6 +2,10 @@ import type { ESLint } from 'eslint'
 import { name, version } from '../package.json'
 import myFirstRule from './rules/my-first-rule'
 
+export const rules = {
+  'my-first-rule': myFirstRule,
+}
+
 const plugin = {
   // https://eslint.org/docs/latest/extend/plugins#meta-data-in-plugins
   // @ts-expect-error
@@ -9,9 +13,7 @@ const plugin = {
     name,
     version,
   },
-  rules: {
-    'my-first-rule': myFirstRule,
-  },
+  rules,
 } satisfies ESLint.Plugin
 
 export default plugin
