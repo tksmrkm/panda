@@ -32,5 +32,8 @@
   ],
   "dependencies": {
     "@pandacss/types": "workspace:*"
+  },
+  "peerDependencies": {
+    "eslint": "*"
   }
 }
