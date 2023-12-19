@@ -18,22 +18,17 @@ const rule: Rule = createRule({
   defaultOptions: [],
   create: (context) => {
     return {
-      JSXIdentifier(node) {
-        if (node.parent.type === 'JSXAttribute' && node.name === 'debug') {
-          context.report({
-            node,
-            messageId: 'debugProp',
-          })
-        }
+      'JSXAttribute > JSXIdentifier[name="debug"]': (node) => {
+        context.report({
+          node,
+          messageId: 'debugProp',
+        })
       },
-
-      Property(node) {
-        if (node.key.type === 'Identifier' && node.key.name === 'debug') {
-          context.report({
-            node,
-            messageId: 'debug',
-          })
-        }
+      'Property[key.type="Identifier"][key.name="debug"]': (node) => {
+        context.report({
+          node,
+          messageId: 'debug',
+        })
       },
     }
   },

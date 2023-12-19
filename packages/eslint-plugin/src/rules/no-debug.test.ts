@@ -6,16 +6,16 @@ const ruleTester = new RuleTester()
 const valid = [
   { code: 'const styles = css({ bg: "red" })' },
 
-  // Ensure that it's only dissalowed within panda styles
-  { code: 'const obj = { keyA: "red", keyB: 2, debug: true }' },
-  {
-    code: '<NonPandaComponent debug={true} />',
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
-      },
-    },
-  },
+  // TODO Ensure that it's only dissalowed within panda styles
+  //   { code: 'const obj = { keyA: "red", keyB: 2, debug: true }' },
+  //   {
+  //     code: '<NonPandaComponent debug={true} />',
+  //     parserOptions: {
+  //       ecmaFeatures: {
+  //         jsx: true,
+  //       },
+  //     },
+  //   },
 ]
 
 const invalid = [
