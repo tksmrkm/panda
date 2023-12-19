@@ -18,13 +18,16 @@ const rule: Rule = createRule({
   defaultOptions: [],
   create: (context) => {
     return {
+      // TODO limit only to panda components
       'JSXAttribute > JSXIdentifier[name="debug"]': (node) => {
         context.report({
           node,
           messageId: 'debugProp',
         })
       },
-      'Property[key.type="Identifier"][key.name="debug"]': (node) => {
+      // TODO Something like this to limit to panda methods
+      // 'CallExpression[callee.name=css] > ObjectExpression Property[key.type="Identifier"][key.name="debug"]': (node) => {
+      'CallExpression > ObjectExpression Property[key.type="Identifier"][key.name="debug"]': (node) => {
         context.report({
           node,
           messageId: 'debug',

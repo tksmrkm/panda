@@ -16,9 +16,12 @@ const rule: Rule = createRule({
   },
   defaultOptions: [],
   create: (context) => {
+    const _codeStr = context.sourceCode.text
+
     return {
       // esquery way
-      'VariableDeclarator[id.type="Identifier"][id.name="bla"]': (node) => {
+      'VariableDeclarator[id.type="Identifier"][id.name!="bla"]': (node) => {
+        console.log('node', node)
         context.report({
           node,
           messageId: 'variableMessage',
