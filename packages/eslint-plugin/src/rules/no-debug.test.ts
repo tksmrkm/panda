@@ -3,11 +3,24 @@ import rule, { RULE_NAME } from './no-debug'
 
 const ruleTester = new RuleTester()
 
-const valid = ['const bla = { foo: "bar", bar: 2 }']
+const valid = [
+  { code: 'const styles = css({ bg: "red" })' },
+
+  // Ensure that it's only dissalowed within panda styles
+  { code: 'const obj = { keyA: "red", keyB: 2, debug: true }' },
+  {
+    code: '<NonPandaComponent debug={true} />',
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+  },
+]
 
 const invalid = [
   {
-    code: 'const a = {debug:true}',
+    code: 'const styles = css({ bg: "red", debug: true })',
     errors: [
       {
         messageId: 'debug',
@@ -16,7 +29,8 @@ const invalid = [
     ],
   },
   {
-    code: '<Circle debug={true} />',
+    code: `import { Circle } from './panda/jsx'
+    <Circle debug={true} />`,
     parserOptions: {
       ecmaFeatures: {
         jsx: true,
