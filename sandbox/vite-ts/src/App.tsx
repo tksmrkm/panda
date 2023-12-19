@@ -19,11 +19,15 @@ const PrimaryButtonLike = panda('span', button, {
 })
 
 function App() {
+  const a = {
+    debug: true,
+  }
   const paddingY = '22px'
   const className = css({ padding: paddingY, fontSize: paddingY ? '2xl' : '4xl' })
 
   return (
     <div className={stack({ padding: '40px', align: 'stretch', color: 'red.300', debug: true })}>
+      <Circle debug={true}>test</Circle>
       <section className={css({ padding: '5', borderWidth: '1px' })}>
         <p className={css({ fontWeight: 'semibold', mb: '2' })}>CSS - Function</p>
         <div className={css({ maxWidth: '840px', marginX: 'auto', textAlign: 'center' })}>

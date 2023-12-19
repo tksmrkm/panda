@@ -1,26 +1,32 @@
-import { type Rule } from 'eslint'
+import { createRule, type Rule } from '../utils'
 
 export const RULE_NAME = 'my-first-rule'
 
-const rule: Rule.RuleModule = {
-  // name: RULE_NAME,
+const rule: Rule = createRule({
+  name: RULE_NAME,
   meta: {
     docs: {
       description: 'This rule is run on typescript!',
     },
+    messages: {
+      variableMessage: 'All variabled should be named "bla"!',
+    },
+    type: 'suggestion',
+    schema: [],
   },
-  create: (context: Rule.RuleContext) => {
+  defaultOptions: [],
+  create: (context) => {
     return {
       VariableDeclarator: (node) => {
         if (node.id.type === 'Identifier' && node.id.name !== 'bla') {
           context.report({
             node,
-            message: 'All variabled should be named "bla"!',
+            messageId: 'variableMessage',
           })
         }
       },
     }
   },
-}
+})
 
 export default rule

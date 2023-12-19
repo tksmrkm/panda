@@ -1,33 +1,23 @@
-import { expect } from 'vitest'
-
-import { RuleTester } from 'eslint'
+import { RuleTester } from '@typescript-eslint/rule-tester'
 import rule, { RULE_NAME } from './my-first-rule'
 
-const valids = ['const bla = { foo: "bar", bar: 2 }']
+const ruleTester = new RuleTester()
 
-const invalid = ['const a = {\nfoo: "bar", bar: 2 }']
+const valid = ['const bla = { foo: "bar", bar: 2 }']
 
-const ruleTester: RuleTester = new RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-})
+const invalid = [
+  {
+    code: 'const nah = { foo: "bar", bar: 2 }',
+    errors: [
+      {
+        messageId: 'variableMessage',
+        suggestions: null,
+      },
+    ],
+  },
+]
 
 ruleTester.run(RULE_NAME, rule as any, {
-  valid: valids,
-  invalid: invalid.map((i) =>
-    typeof i === 'string'
-      ? {
-          code: i,
-          errors: null,
-          onOutput: (output: string) => {
-            expect(output).toMatchSnapshot()
-          },
-        }
-      : {
-          ...(i as any),
-          errors: null,
-          onOutput: (output: string) => {
-            expect(output).toMatchSnapshot()
-          },
-        },
-  ),
+  valid,
+  invalid,
 })

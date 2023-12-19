@@ -1,26 +1,42 @@
-import { type Rule } from 'eslint'
+import { createRule, type Rule } from '../utils'
 
 export const RULE_NAME = 'no-debug'
 
-const rule: Rule.RuleModule = {
-  // name: RULE_NAME,
+const rule: Rule = createRule({
+  name: RULE_NAME,
   meta: {
     docs: {
-      description: 'This rule is run on typescript!',
+      description: 'Prevent shipping the debug attribute to production',
     },
+    messages: {
+      debug: 'Remove the debug utility.',
+      debugProp: 'Remove the debug prop.',
+    },
+    type: 'suggestion',
+    schema: [],
   },
-  create: (context: Rule.RuleContext) => {
+  defaultOptions: [],
+  create: (context) => {
     return {
-      VariableDeclarator: (node) => {
-        if (node.id.type === 'Identifier' && node.id.name !== 'bla') {
+      JSXIdentifier(node) {
+        if (node.parent.type === 'JSXAttribute' && node.name === 'debug') {
           context.report({
             node,
-            message: 'All variabled should be named "bla"!',
+            messageId: 'debugProp',
+          })
+        }
+      },
+
+      Property(node) {
+        if (node.key.type === 'Identifier' && node.key.name === 'debug') {
+          context.report({
+            node,
+            messageId: 'debug',
           })
         }
       },
     }
   },
-}
+})
 
 export default rule
