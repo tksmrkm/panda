@@ -3,7 +3,7 @@ import { expect } from 'vitest'
 import { RuleTester } from 'eslint'
 import rule, { RULE_NAME } from './my-first-rule'
 
-const valids = ['const a = { foo: "bar", bar: 2 }']
+const valids = ['const bla = { foo: "bar", bar: 2 }']
 
 const invalid = ['const a = {\nfoo: "bar", bar: 2 }']
 
