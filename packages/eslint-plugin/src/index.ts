@@ -1,9 +1,11 @@
 import type { ESLint } from 'eslint'
 import { name, version } from '../package.json'
-import myFirstRule from './rules/my-first-rule'
+import myFirstRule, { RULE_NAME as MyFirstRule } from './rules/my-first-rule'
+import noDebug, { RULE_NAME as NoDebug } from './rules/no-debug'
 
 export const rules = {
-  'my-first-rule': myFirstRule,
+  [MyFirstRule]: myFirstRule,
+  [NoDebug]: noDebug,
 }
 
 const plugin = {

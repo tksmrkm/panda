@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@pandacss/dev": "workspace:*",
+    "@pandacss/eslint-plugin": "workspace:*",
     "@pandacss/studio": "workspace:*",
     "@types/react": "18.2.42",
     "@types/react-dom": "18.2.17",
