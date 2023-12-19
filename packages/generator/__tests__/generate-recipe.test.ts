@@ -1,14 +1,26 @@
+import type { ConfigResultWithHooks } from '@pandacss/types'
 import { describe, expect, test } from 'vitest'
-import { generateRecipes } from '../src/artifacts/js/recipe'
-import { generator } from './fixture'
+import { Generator } from '../src'
+import { generateCreateRecipe, generateRecipes } from '../src/artifacts/js/recipe'
+import { generatorConfig } from './fixture'
+
+const createRecipeJs = (config: ConfigResultWithHooks) => {
+  const generator = new Generator(config)
+  return generateCreateRecipe(generator)
+}
+
+const recipeJs = (config: ConfigResultWithHooks) => {
+  const generator = new Generator(config)
+  return generateRecipes(generator)
+}
 
 describe('generate recipes', () => {
   test('should ', () => {
-    expect(generateRecipes(generator)).toMatchInlineSnapshot(`
-      [
-        {
-          "dts": "",
-          "js": "import { css } from '../css/css.mjs';
+    expect(createRecipeJs(generatorConfig)).toMatchInlineSnapshot(`
+      {
+        "dts": "",
+        "js": "import { finalizeConditions, sortConditions } from '../css/conditions.mjs';
+      import { css } from '../css/css.mjs';
       import { assertCompoundVariant, getCompoundVariantCss } from '../css/cva.mjs';
       import { cx } from '../css/cx.mjs';
       import { compact, createCss, splitProps, uniq, withoutSpace } from '../helpers.mjs';
@@ -36,6 +48,11 @@ describe('generate recipes', () => {
 
          const recipeCss = createCss({
            
+           conditions: {
+             shift: sortConditions,
+             finalize: finalizeConditions,
+             breakpoints: { keys: [\\"base\\",\\"sm\\",\\"md\\",\\"lg\\",\\"xl\\",\\"2xl\\"] }
+           },
            utility: {
              
              transform,
@@ -82,8 +99,12 @@ describe('generate recipes', () => {
        })
        }
       ",
-          "name": "create-recipe",
-        },
+        "name": "create-recipe",
+      }
+    `)
+
+    expect(recipeJs(generatorConfig)).toMatchInlineSnapshot(`
+      [
         {
           "dts": "import type { ConditionalValue } from '../types/index';
       import type { DistributiveOmit, Pretty } from '../types/system-types';
@@ -97,7 +118,7 @@ describe('generate recipes', () => {
       }
 
       export type TextStyleVariantProps = {
-        [key in keyof TextStyleVariant]?: ConditionalValue<TextStyleVariant[key]>
+        [key in keyof TextStyleVariant]?: ConditionalValue<TextStyleVariant[key]> | undefined
       }
 
       export interface TextStyleRecipe {
@@ -153,7 +174,7 @@ describe('generate recipes', () => {
       }
 
       export type TooltipStyleVariantProps = {
-        [key in keyof TooltipStyleVariant]?: ConditionalValue<TooltipStyleVariant[key]>
+        [key in keyof TooltipStyleVariant]?: ConditionalValue<TooltipStyleVariant[key]> | undefined
       }
 
       export interface TooltipStyleRecipe {
@@ -195,6 +216,61 @@ describe('generate recipes', () => {
           "dts": "import type { ConditionalValue } from '../types/index';
       import type { DistributiveOmit, Pretty } from '../types/system-types';
 
+      interface CardStyleVariant {
+        rounded: boolean
+      }
+
+      type CardStyleVariantMap = {
+        [key in keyof CardStyleVariant]: Array<CardStyleVariant[key]>
+      }
+
+      export type CardStyleVariantProps = {
+        [key in keyof CardStyleVariant]?: ConditionalValue<CardStyleVariant[key]> | undefined
+      }
+
+      export interface CardStyleRecipe {
+        __type: CardStyleVariantProps
+        (props?: CardStyleVariantProps): string
+        raw: (props?: CardStyleVariantProps) => CardStyleVariantProps
+        variantMap: CardStyleVariantMap
+        variantKeys: Array<keyof CardStyleVariant>
+        splitVariantProps<Props extends CardStyleVariantProps>(props: Props): [CardStyleVariantProps, Pretty<DistributiveOmit<Props, keyof CardStyleVariantProps>>]
+      }
+
+
+      export declare const cardStyle: CardStyleRecipe",
+          "js": "import { splitProps } from '../helpers.mjs';
+      import { createRecipe, mergeRecipes } from './create-recipe.mjs';
+
+      const cardStyleFn = /* @__PURE__ */ createRecipe('card', {}, [])
+
+      const cardStyleVariantMap = {
+        \\"rounded\\": [
+          \\"true\\"
+        ]
+      }
+
+      const cardStyleVariantKeys = Object.keys(cardStyleVariantMap)
+
+      export const cardStyle = /* @__PURE__ */ Object.assign(cardStyleFn, {
+        __recipe__: true,
+        __name__: 'cardStyle',
+        raw: (props) => props,
+        variantKeys: cardStyleVariantKeys,
+        variantMap: cardStyleVariantMap,
+        merge(recipe) {
+          return mergeRecipes(this, recipe)
+        },
+        splitVariantProps(props) {
+          return splitProps(props, cardStyleVariantKeys)
+        },
+      })",
+          "name": "card-style",
+        },
+        {
+          "dts": "import type { ConditionalValue } from '../types/index';
+      import type { DistributiveOmit, Pretty } from '../types/system-types';
+
       interface ButtonStyleVariant {
         size: \\"sm\\" | \\"md\\"
       variant: \\"solid\\" | \\"outline\\"
@@ -205,7 +281,7 @@ describe('generate recipes', () => {
       }
 
       export type ButtonStyleVariantProps = {
-        [key in keyof ButtonStyleVariant]?: ConditionalValue<ButtonStyleVariant[key]>
+        [key in keyof ButtonStyleVariant]?: ConditionalValue<ButtonStyleVariant[key]> | undefined
       }
 
       export interface ButtonStyleRecipe {

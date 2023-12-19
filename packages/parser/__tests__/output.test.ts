@@ -1,15 +1,5 @@
-import { describe, test, expect } from 'vitest'
-import { getFixtureProject } from './fixture'
-import type { Config, TSConfig } from '@pandacss/types'
-
-const run = (code: string, userConfig?: Config, tsconfig?: TSConfig) => {
-  const { parse, generator } = getFixtureProject(code, userConfig, tsconfig)
-  const result = parse()!
-  return {
-    json: result?.toArray().map(({ box, ...item }) => item),
-    css: generator.getParserCss(result)!,
-  }
-}
+import { describe, expect, test } from 'vitest'
+import { parseAndExtract } from './fixture'
 
 describe('extract to css output pipeline', () => {
   test('basic usage', () => {
@@ -52,7 +42,7 @@ describe('extract to css output pipeline', () => {
         )
        }
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -197,7 +187,7 @@ describe('extract to css output pipeline', () => {
 
       css({ mx: '3', paddingTop: '4' }, { mx: '10', pt: '6' })
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -255,7 +245,7 @@ describe('extract to css output pipeline', () => {
       )
     }
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       theme: {
         extend: {
           recipes: {
@@ -465,7 +455,7 @@ describe('extract to css output pipeline', () => {
       )
     }
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       theme: {
         extend: {
           recipes: {
@@ -573,20 +563,6 @@ describe('extract to css output pipeline', () => {
           "name": "bgRecipe",
           "type": "recipe",
         },
-        {
-          "data": [
-            {},
-          ],
-          "name": "ComponentWithMultipleRecipes",
-          "type": "jsx-recipe",
-        },
-        {
-          "data": [
-            {},
-          ],
-          "name": "ComponentWithMultipleRecipes",
-          "type": "jsx-recipe",
-        },
       ]
     `)
 
@@ -628,7 +604,7 @@ describe('extract to css output pipeline', () => {
     }
 
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -687,7 +663,7 @@ describe('extract to css output pipeline', () => {
         }
     \`
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -814,7 +790,7 @@ describe('extract to css output pipeline', () => {
         color: token(colors.blue.100);
     \`
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -866,7 +842,7 @@ describe('extract to css output pipeline', () => {
        }
      `
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -924,7 +900,7 @@ describe('extract to css output pipeline', () => {
         )
        }
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -995,7 +971,7 @@ describe('extract to css output pipeline', () => {
         )
        }
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -1084,7 +1060,7 @@ describe('extract to css output pipeline', () => {
         );
       };
      `
-      const result = run(code, {
+      const result = parseAndExtract(code, {
         theme: {
           extend: {
             semanticTokens: {
@@ -1220,7 +1196,7 @@ describe('extract to css output pipeline', () => {
         )
       }
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -1289,7 +1265,7 @@ describe('extract to css output pipeline', () => {
         )
       }
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       patterns: {
         extend: {
           stack: {
@@ -1365,7 +1341,7 @@ describe('extract to css output pipeline', () => {
       color: var(--colors-purple-100);
     \`
    `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -1462,7 +1438,7 @@ describe('extract to css output pipeline', () => {
         )
       }
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -1585,7 +1561,7 @@ describe('extract to css output pipeline', () => {
         )
        }
      `
-    const { parse, generator } = getFixtureProject(code, {
+    const result = parseAndExtract(code, {
       theme: {
         extend: {
           recipes: {
@@ -1631,8 +1607,8 @@ describe('extract to css output pipeline', () => {
         },
       },
     })
-    const result = parse()!
-    expect(result?.toArray().map(({ box, ...item }) => item)).toMatchInlineSnapshot(`
+
+    expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
@@ -1718,9 +1694,36 @@ describe('extract to css output pipeline', () => {
         },
       ]
     `)
-    const css = generator.getParserCss(result)!
-    expect(css).toMatchInlineSnapshot(`
-      "@layer utilities {
+
+    expect(result.css).toMatchInlineSnapshot(`
+      "@layer recipes {
+        .button--size_md {
+          padding: var(--spacing-4);
+          border-radius: var(--radii-md)
+          }
+
+        .button--variant_danger {
+          color: var(--colors-white);
+          background-color: var(--colors-red-500)
+          }
+
+        .anotherButton--spacing_sm {
+          padding: var(--spacing-2);
+          border-radius: var(--radii-sm)
+          }
+
+        .complexButton--color_blue {
+          color: var(--colors-blue-500)
+          }
+
+        @layer _base {
+          .button {
+            font-size: var(--font-sizes-lg)
+              }
+          }
+      }
+
+      @layer utilities {
         .mt_40px {
           margin-top: 40px
           }
@@ -1747,33 +1750,6 @@ describe('extract to css output pipeline', () => {
 
         .gap_10px {
           gap: 10px
-          }
-      }
-
-      @layer recipes {
-        .button--size_md {
-          padding: var(--spacing-4);
-          border-radius: var(--radii-md)
-          }
-
-        .button--variant_danger {
-          color: var(--colors-white);
-          background-color: var(--colors-red-500)
-          }
-
-        .anotherButton--spacing_sm {
-          padding: var(--spacing-2);
-          border-radius: var(--radii-sm)
-          }
-
-        .complexButton--color_blue {
-          color: var(--colors-blue-500)
-          }
-
-        @layer _base {
-          .button {
-            font-size: var(--font-sizes-lg)
-              }
           }
       }"
     `)
@@ -1806,7 +1782,7 @@ describe('extract to css output pipeline', () => {
     };
 
      `
-    const { parse, generator } = getFixtureProject(code, {
+    const result = parseAndExtract(code, {
       outdir: 'styled-system',
       jsxFactory: 'styled',
       theme: {
@@ -1820,8 +1796,8 @@ describe('extract to css output pipeline', () => {
         },
       },
     })
-    const result = parse()!
-    expect(result?.toArray().map(({ box, ...item }) => item)).toMatchInlineSnapshot(`
+
+    expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
@@ -1869,8 +1845,8 @@ describe('extract to css output pipeline', () => {
         },
       ]
     `)
-    const css = generator.getParserCss(result)!
-    expect(css).toMatchInlineSnapshot(`
+
+    expect(result.css).toMatchInlineSnapshot(`
       "@layer utilities {
         .bg_tomato {
           background-color: tomato
@@ -1908,7 +1884,7 @@ describe('extract to css output pipeline', () => {
       "& h2": paragraphSpacingStyle,
     });`
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2005,7 +1981,7 @@ describe('extract to css output pipeline', () => {
     })
      `
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2091,7 +2067,7 @@ describe('extract to css output pipeline', () => {
       );
     }
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       outdir: 'anywhere',
       importMap: {
         css: 'controlled-import-map/css',
@@ -2099,6 +2075,126 @@ describe('extract to css output pipeline', () => {
         patterns: 'controlled-import-map/common',
         jsx: 'controlled-import-map',
       },
+    })
+
+    expect(result.json).toMatchInlineSnapshot(`
+      [
+        {
+          "data": [
+            {
+              "mx": "3",
+            },
+          ],
+          "name": "css",
+          "type": "object",
+        },
+        {
+          "data": [
+            {
+              "visual": "funky",
+            },
+          ],
+          "name": "buttonStyle",
+          "type": "recipe",
+        },
+        {
+          "data": [
+            {
+              "direction": "column",
+            },
+          ],
+          "name": "stack",
+          "type": "pattern",
+        },
+        {
+          "data": [
+            {
+              "color": "red",
+            },
+          ],
+          "name": "Box",
+          "type": "jsx-pattern",
+        },
+      ]
+    `)
+
+    expect(result.css).toMatchInlineSnapshot(`
+      "@layer recipes {
+        .buttonStyle--size_md {
+          height: 3rem;
+          min-width: 3rem;
+          padding: 0 0.75rem
+          }
+
+        .buttonStyle--variant_solid {
+          background-color: blue;
+          color: var(--colors-white);
+          }
+
+        .buttonStyle--variant_solid[data-disabled] {
+          background-color: gray;
+          color: var(--colors-black)
+              }
+
+        .buttonStyle--variant_solid:is(:hover, [data-hover]) {
+          background-color: darkblue
+              }
+
+        @layer _base {
+          .buttonStyle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center
+              }
+          }
+      }
+
+      @layer utilities {
+        .mx_3 {
+          margin-inline: var(--spacing-3)
+          }
+
+        .d_flex {
+          display: flex
+          }
+
+        .flex_column {
+          flex-direction: column
+          }
+
+        .gap_10px {
+          gap: 10px
+          }
+
+        .text_red {
+          color: red
+          }
+      }"
+    `)
+  })
+
+  test('import map as string', () => {
+    const code = `
+    import { css } from "string-import-map/css";
+    import { buttonStyle } from "string-import-map/recipes";
+    import { stack } from "string-import-map/patterns";
+    import { Box } from "string-import-map/jsx";
+
+    css({ mx: '3' })
+    stack({ direction: "column" })
+    buttonStyle({ visual: "funky" })
+
+    const App = () => {
+      return (
+        <>
+          <Box color="red" />
+        </>
+      );
+    }
+     `
+    const result = parseAndExtract(code, {
+      outdir: 'anywhere',
+      importMap: 'string-import-map',
     })
     expect(result.json).toMatchInlineSnapshot(`
       [
@@ -2142,29 +2238,7 @@ describe('extract to css output pipeline', () => {
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .mx_3 {
-          margin-inline: var(--spacing-3)
-          }
-
-        .d_flex {
-          display: flex
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .text_red {
-          color: red
-          }
-      }
-
-      @layer recipes {
+      "@layer recipes {
         .buttonStyle--size_md {
           height: 3rem;
           min-width: 3rem;
@@ -2192,6 +2266,28 @@ describe('extract to css output pipeline', () => {
             justify-content: center
               }
           }
+      }
+
+      @layer utilities {
+        .mx_3 {
+          margin-inline: var(--spacing-3)
+          }
+
+        .d_flex {
+          display: flex
+          }
+
+        .flex_column {
+          flex-direction: column
+          }
+
+        .gap_10px {
+          gap: 10px
+          }
+
+        .text_red {
+          color: red
+          }
       }"
     `)
   })
@@ -2207,7 +2303,7 @@ describe('extract to css output pipeline', () => {
          }
        `
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2244,7 +2340,7 @@ describe('extract to css output pipeline', () => {
          }
        `
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2291,7 +2387,7 @@ describe('extract to css output pipeline', () => {
          }
        `
 
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2377,7 +2473,7 @@ describe('extract to css output pipeline', () => {
     }
 
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       theme: {
         extend: {
           recipes: {
@@ -2442,25 +2538,7 @@ describe('extract to css output pipeline', () => {
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .text_amber\\\\.400 {
-          color: var(--colors-amber-400)
-          }
-
-        [data-theme=dark] .dark\\\\:text_sky\\\\.300, .dark .dark\\\\:text_sky\\\\.300, .dark\\\\:text_sky\\\\.300.dark, .dark\\\\:text_sky\\\\.300[data-theme=dark] {
-          color: var(--colors-sky-300)
-              }
-
-        .hover\\\\:text_amber\\\\.500:is(:hover, [data-hover]) {
-          color: var(--colors-amber-500)
-              }
-
-        [data-theme=dark] .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]), .dark .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]), .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]).dark, .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover])[data-theme=dark] {
-          color: var(--colors-sky-200)
-                  }
-      }
-
-      @layer recipes {
+      "@layer recipes {
         .button--size_md {
           border-radius: var(--radii-md)
           }
@@ -2479,6 +2557,24 @@ describe('extract to css output pipeline', () => {
             background: var(--colors-red-900)
               }
           }
+      }
+
+      @layer utilities {
+        .text_amber\\\\.400 {
+          color: var(--colors-amber-400)
+          }
+
+        [data-theme=dark] .dark\\\\:text_sky\\\\.300, .dark .dark\\\\:text_sky\\\\.300, .dark\\\\:text_sky\\\\.300.dark, .dark\\\\:text_sky\\\\.300[data-theme=dark] {
+          color: var(--colors-sky-300)
+              }
+
+        .hover\\\\:text_amber\\\\.500:is(:hover, [data-hover]) {
+          color: var(--colors-amber-500)
+              }
+
+        [data-theme=dark] .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]), .dark .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]), .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover]).dark, .hover\\\\:dark\\\\:text_sky\\\\.200:is(:hover, [data-hover])[data-theme=dark] {
+          color: var(--colors-sky-200)
+                  }
       }"
     `)
   })
@@ -2497,7 +2593,7 @@ describe('extract to css output pipeline', () => {
     }
 
      `
-    const result = run(code, {
+    const result = parseAndExtract(code, {
       theme: {
         extend: {
           recipes: {
@@ -2546,19 +2642,7 @@ describe('extract to css output pipeline', () => {
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .fs_2 {
-          font-size: 2px
-          }
-
-        @media screen and (min-width: 40em) {
-          .sm\\\\:fs_5 {
-            font-size: 5px
-          }
-              }
-      }
-
-      @layer recipes {
+      "@layer recipes {
         .card--size_sm {
           border-radius: var(--radii-sm);
           padding: var(--spacing-2);
@@ -2576,6 +2660,18 @@ describe('extract to css output pipeline', () => {
                       }
                   }
           }
+      }
+
+      @layer utilities {
+        .fs_2 {
+          font-size: 2px
+          }
+
+        @media screen and (min-width: 40em) {
+          .sm\\\\:fs_5 {
+            font-size: 5px
+          }
+              }
       }"
     `)
   })
@@ -2593,7 +2689,7 @@ describe('extract to css output pipeline', () => {
       );
     };
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
@@ -2639,1033 +2735,86 @@ describe('extract to css output pipeline', () => {
       }"
     `)
   })
-})
 
-describe('preset patterns', () => {
-  // stack vstack hstack spacer circle absoluteCenter grid gridItem wrap container center aspectRatio
-  test('box', () => {
+  test('token fn in at-rules', () => {
     const code = `
-      import { box } from ".panda/patterns"
+    import { css } from '.panda/css';
 
-      function Button() {
-        return (
-          <div>
-              <div className={box({ color: "blue.100" })}>Click me</div>
-          </div>
-        )
+    css({
+      '@container (min-width: token(sizes.xl))': {
+        color: 'green.300',
+      },
+      '@media (min-width: token(sizes.2xl))': {
+        color: 'red.300',
+      },
+      "@container (min-width: token(sizes.4xl, 1280px))": {
+        display: "flex"
       }
+    })
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
             {
-              "color": "blue.100",
+              "@container (min-width: token(sizes.4xl, 1280px))": {
+                "display": "flex",
+              },
+              "@container (min-width: token(sizes.xl))": {
+                "color": "green.300",
+              },
+              "@media (min-width: token(sizes.2xl))": {
+                "color": "red.300",
+              },
             },
           ],
-          "name": "box",
-          "type": "pattern",
+          "name": "css",
+          "type": "object",
         },
       ]
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
       "@layer utilities {
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
+        @container (min-width: 36rem) {
+          .\\\\[\\\\@container_\\\\(min-width\\\\:_token\\\\(sizes\\\\.xl\\\\)\\\\)\\\\]\\\\:text_green\\\\.300 {
+            color: var(--colors-green-300)
           }
+              }
+
+        @container (min-width: 56rem) {
+          .\\\\[\\\\@container_\\\\(min-width\\\\:_token\\\\(sizes\\\\.4xl\\\\,_1280px\\\\)\\\\)\\\\]\\\\:d_flex {
+            display: flex
+          }
+              }
+
+        @media (min-width: 42rem) {
+          .\\\\[\\\\@media_\\\\(min-width\\\\:_token\\\\(sizes\\\\.2xl\\\\)\\\\)\\\\]\\\\:text_red\\\\.300 {
+            color: var(--colors-red-300)
+          }
+              }
       }"
     `)
   })
 
-  test('jsx box', () => {
+  test('urls as value', () => {
     const code = `
-      import { Box } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Box color="blue.100">Click me</div>
-          </div>
-          )
-      }
+    const App = () => {
+      return <CopyButton content="https://www.buymeacoffee.com/grizzlycodes" />
+    }
      `
-    const result = run(code)
+    const result = parseAndExtract(code, { strictTokens: true })
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
             {
-              "color": "blue.100",
+              "content": "https://www.buymeacoffee.com/grizzlycodes",
             },
           ],
-          "name": "Box",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('flex', () => {
-    const code = `
-      import { flex } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={flex()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "flex",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-      }"
-    `)
-  })
-
-  test('jsx flex', () => {
-    const code = `
-      import { Flex } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Flex color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Flex",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('stack', () => {
-    const code = `
-      import { stack } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={stack()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "stack",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-      }"
-    `)
-  })
-
-  test('jsx stack', () => {
-    const code = `
-      import { Stack } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Stack color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Stack",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('vstack', () => {
-    const code = `
-      import { vstack } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={vstack()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "vstack",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-      }"
-    `)
-  })
-
-  test('jsx vStack', () => {
-    const code = `
-      import { VStack } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <VStack color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "VStack",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('hstack', () => {
-    const code = `
-      import { hstack } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={hstack()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "hstack",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .flex_row {
-          flex-direction: row
-          }
-      }"
-    `)
-  })
-
-  test('jsx hStack', () => {
-    const code = `
-      import { HStack } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <HStack color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "HStack",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .flex_row {
-          flex-direction: row
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('spacer', () => {
-    const code = `
-      import { spacer } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={spacer()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "spacer",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .self_stretch {
-          align-self: stretch
-          }
-
-        .justify-self_stretch {
-          justify-self: stretch
-          }
-
-        .flex_1 {
-          flex: 1 1 0%
-          }
-      }"
-    `)
-  })
-
-  test('linkOverlay, linkBox', () => {
-    const code = `
-      import { linkOverlay, linkBox } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div className={linkBox()}>
-              <a className={linkOverlay()}>Click me</a>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "linkBox",
-          "type": "pattern",
-        },
-        {
-          "data": [
-            {},
-          ],
-          "name": "linkOverlay",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .\\\\[\\\\&_\\\\:where\\\\(a\\\\,_abbr\\\\)\\\\]\\\\:pos_relative :where(a, abbr) {
-          position: relative
-              }
-
-        .\\\\[\\\\&_\\\\:where\\\\(a\\\\,_abbr\\\\)\\\\]\\\\:z_1 :where(a, abbr) {
-          z-index: 1
-              }
-
-        .pos_static {
-          position: static
-          }
-
-        .before\\\\:content_\\\\\\"\\\\\\"::before {
-          content: \\"\\"
-              }
-
-        .before\\\\:d_block::before {
-          display: block
-              }
-
-        .before\\\\:pos_absolute::before {
-          position: absolute
-              }
-
-        .before\\\\:cursor_inherit::before {
-          cursor: inherit
-              }
-
-        .before\\\\:inset_0::before {
-          inset: var(--spacing-0)
-              }
-
-        .before\\\\:z_0::before {
-          z-index: 0
-              }
-      }"
-    `)
-  })
-
-  test('jsx linkOverlay, linkBox', () => {
-    const code = `
-      import { LinkBox, LinkOverlay } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <LinkBox>
-              <LinkOverlay>Click me</LinkOverlay>
-          </LinkBox>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "LinkBox",
-          "type": "jsx-pattern",
-        },
-        {
-          "data": [
-            {},
-          ],
-          "name": "LinkOverlay",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .\\\\[\\\\&_\\\\:where\\\\(a\\\\,_abbr\\\\)\\\\]\\\\:pos_relative :where(a, abbr) {
-          position: relative
-              }
-
-        .\\\\[\\\\&_\\\\:where\\\\(a\\\\,_abbr\\\\)\\\\]\\\\:z_1 :where(a, abbr) {
-          z-index: 1
-              }
-
-        .pos_static {
-          position: static
-          }
-
-        .before\\\\:content_\\\\\\"\\\\\\"::before {
-          content: \\"\\"
-              }
-
-        .before\\\\:d_block::before {
-          display: block
-              }
-
-        .before\\\\:pos_absolute::before {
-          position: absolute
-              }
-
-        .before\\\\:cursor_inherit::before {
-          cursor: inherit
-              }
-
-        .before\\\\:inset_0::before {
-          inset: var(--spacing-0)
-              }
-
-        .before\\\\:z_0::before {
-          z-index: 0
-              }
-      }"
-    `)
-  })
-
-  test('jsx spacer', () => {
-    const code = `
-      import { Spacer } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Spacer color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Spacer",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .self_stretch {
-          align-self: stretch
-          }
-
-        .justify-self_stretch {
-          justify-self: stretch
-          }
-
-        .flex_1 {
-          flex: 1 1 0%
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('circle', () => {
-    const code = `
-      import { circle } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={circle()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "circle",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-
-        .flex_0_0_auto {
-          flex: 0 0 auto
-          }
-
-        .rounded_9999px {
-          border-radius: 9999px
-          }
-      }"
-    `)
-  })
-
-  test('jsx circle', () => {
-    const code = `
-      import { Circle } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Circle color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Circle",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-
-        .flex_0_0_auto {
-          flex: 0 0 auto
-          }
-
-        .rounded_9999px {
-          border-radius: 9999px
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('float', () => {
-    const code = `
-      import { float } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={float()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "float",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_inline-flex {
-          display: inline-flex
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .pos_absolute {
-          position: absolute
-          }
-
-        .inset-t_0 {
-          inset-block-start: var(--spacing-0)
-          }
-
-        .inset-b_auto {
-          inset-block-end: auto
-          }
-
-        .start_auto {
-          inset-inline-start: auto
-          }
-
-        .end_0 {
-          inset-inline-end: var(--spacing-0)
-          }
-
-        .translate_50\\\\%_-50\\\\% {
-          translate: 50% -50%
-          }
-      }"
-    `)
-  })
-
-  test('jsx absoluteCenter', () => {
-    const code = `
-      import { Float } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Float color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Float",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_inline-flex {
-          display: inline-flex
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .pos_absolute {
-          position: absolute
-          }
-
-        .inset-t_0 {
-          inset-block-start: var(--spacing-0)
-          }
-
-        .inset-b_auto {
-          inset-block-end: auto
-          }
-
-        .start_auto {
-          inset-inline-start: auto
-          }
-
-        .end_0 {
-          inset-inline-end: var(--spacing-0)
-          }
-
-        .translate_50\\\\%_-50\\\\% {
-          translate: 50% -50%
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('grid', () => {
-    const code = `
-      import { grid } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={grid()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "grid",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_grid {
-          display: grid
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-      }"
-    `)
-  })
-
-  test('jsx grid', () => {
-    const code = `
-      import { Grid } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Grid color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Grid",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_grid {
-          display: grid
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('gridItem', () => {
-    const code = `
-      import { gridItem } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={gridItem()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "gridItem",
-          "type": "pattern",
+          "name": "CopyButton",
+          "type": "jsx",
         },
       ]
     `)
@@ -3673,871 +2822,234 @@ describe('preset patterns', () => {
     expect(result.css).toMatchInlineSnapshot('""')
   })
 
-  test('jsx gridItem', () => {
+  test('strictTokens arbitrary value escape hatch', () => {
     const code = `
-      import { GridItem } from ".panda/jsx"
+    import { css } from '.panda/css';
 
-      function Button() {
-        return (
-          <div>
-              <GridItem color="blue.100">Click me</div>
-          </div>
-          )
-      }
+    css({
+      color: '[#fff]',
+      bg: 'red.300',
+      bgColor: '[rgb(51 155 240)]',
+      outlineColor: '[rgb(51 155 240)!]',
+      borderColor: '[rgb(51 155 240)!important]',
+    })
      `
-    const result = run(code)
+    const result = parseAndExtract(code, { strictTokens: true })
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
             {
-              "color": "blue.100",
-            },
-          ],
-          "name": "GridItem",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('wrap', () => {
-    const code = `
-      import { wrap } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={wrap()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "wrap",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .flex-wrap_wrap {
-          flex-wrap: wrap
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-      }"
-    `)
-  })
-
-  test('jsx wrap', () => {
-    const code = `
-      import { Wrap } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Wrap color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Wrap",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .flex-wrap_wrap {
-          flex-wrap: wrap
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('container', () => {
-    const code = `
-      import { container } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={container()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "container",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .max-w_8xl {
-          max-width: var(--sizes-8xl)
-          }
-
-        .mx_auto {
-          margin-inline: auto
-          }
-
-        .px_4 {
-          padding-inline: var(--spacing-4)
-          }
-
-        @media screen and (min-width: 48em) {
-          .md\\\\:px_6 {
-            padding-inline: var(--spacing-6)
-          }
-              }
-
-        @media screen and (min-width: 64em) {
-          .lg\\\\:px_8 {
-            padding-inline: var(--spacing-8)
-          }
-              }
-      }"
-    `)
-  })
-
-  test('jsx container', () => {
-    const code = `
-      import { Container } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Container color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Container",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .max-w_8xl {
-          max-width: var(--sizes-8xl)
-          }
-
-        .mx_auto {
-          margin-inline: auto
-          }
-
-        .px_4 {
-          padding-inline: var(--spacing-4)
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-
-        @media screen and (min-width: 48em) {
-          .md\\\\:px_6 {
-            padding-inline: var(--spacing-6)
-          }
-              }
-
-        @media screen and (min-width: 64em) {
-          .lg\\\\:px_8 {
-            padding-inline: var(--spacing-8)
-          }
-              }
-      }"
-    `)
-  })
-
-  test('center', () => {
-    const code = `
-      import { center } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={center()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "center",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-      }"
-    `)
-  })
-
-  test('jsx center', () => {
-    const code = `
-      import { Center } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <Center color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "Center",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .d_flex {
-          display: flex
-          }
-
-        .items_center {
-          align-items: center
-          }
-
-        .justify_center {
-          justify-content: center
-          }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('aspectRatio', () => {
-    const code = `
-      import { aspectRatio } from ".panda/patterns"
-
-      function Button() {
-        return (
-          <div>
-              <div className={aspectRatio()}>Click me</div>
-          </div>
-        )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {},
-          ],
-          "name": "aspectRatio",
-          "type": "pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .before\\\\:content_\\\\\\"\\\\\\"::before {
-          content: \\"\\"
-              }
-
-        .before\\\\:d_block::before {
-          display: block
-              }
-
-        .before\\\\:h_0::before {
-          height: var(--sizes-0)
-              }
-
-        .before\\\\:pb_75\\\\%::before {
-          padding-bottom: 75%
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:d_flex>* {
-          display: flex
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:justify_center>* {
-          justify-content: center
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:items_center>* {
-          align-items: center
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:overflow_hidden>* {
-          overflow: hidden
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:pos_absolute>* {
-          position: absolute
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:inset_0>* {
-          inset: var(--spacing-0)
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:w_100\\\\%>* {
-          width: 100%
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:h_100\\\\%>* {
-          height: 100%
-              }
-
-        .\\\\[\\\\&\\\\>img\\\\,_\\\\&\\\\>video\\\\]\\\\:object_cover>img, .\\\\[\\\\&\\\\>img\\\\,_\\\\&\\\\>video\\\\]\\\\:object_cover>video {
-          object-fit: cover
-              }
-      }"
-    `)
-  })
-
-  test('jsx aspectRatio', () => {
-    const code = `
-      import { AspectRatio } from ".panda/jsx"
-
-      function Button() {
-        return (
-          <div>
-              <AspectRatio color="blue.100">Click me</div>
-          </div>
-          )
-      }
-     `
-    const result = run(code)
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "color": "blue.100",
-            },
-          ],
-          "name": "AspectRatio",
-          "type": "jsx-pattern",
-        },
-      ]
-    `)
-
-    expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .pos_relative {
-          position: relative
-          }
-
-        .before\\\\:content_\\\\\\"\\\\\\"::before {
-          content: \\"\\"
-              }
-
-        .before\\\\:d_block::before {
-          display: block
-              }
-
-        .before\\\\:h_0::before {
-          height: var(--sizes-0)
-              }
-
-        .before\\\\:pb_75\\\\%::before {
-          padding-bottom: 75%
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:d_flex>* {
-          display: flex
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:justify_center>* {
-          justify-content: center
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:items_center>* {
-          align-items: center
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:overflow_hidden>* {
-          overflow: hidden
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:pos_absolute>* {
-          position: absolute
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:inset_0>* {
-          inset: var(--spacing-0)
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:w_100\\\\%>* {
-          width: 100%
-              }
-
-        .\\\\[\\\\&\\\\>\\\\*\\\\]\\\\:h_100\\\\%>* {
-          height: 100%
-              }
-
-        .\\\\[\\\\&\\\\>img\\\\,_\\\\&\\\\>video\\\\]\\\\:object_cover>img, .\\\\[\\\\&\\\\>img\\\\,_\\\\&\\\\>video\\\\]\\\\:object_cover>video {
-          object-fit: cover
-              }
-
-        .text_blue\\\\.100 {
-          color: var(--colors-blue-100)
-          }
-      }"
-    `)
-  })
-
-  test('nested outdir + tsconfig.compilerOptions.baseUrl importMap behaviour', () => {
-    const code = `
-    import { css } from "../styled-system/css";
-    import { container } from "../styled-system/patterns";
-
-    export default function App() {
-      return (
-        <div
-          className={container({
-            page: "A4",
-            width: {
-              _print: "210mm",
-            },
-            height: {
-              _print: "297mm",
-              base: "600px",
-            },
-            display: "flex",
-            margin: "auto",
-            flexDir: {
-              _print: "row",
-              base: "column",
-              sm: "row",
-            },
-          })}
-        >
-          <div className={css({ flex: 2 })}>aaa</div>
-          <div className={css({ flex: 1 })}>bbb</div>
-        </div>
-      );
-    }
-
-     `
-    const result = run(code, { outdir: 'src/styled-system', cwd: 'app' }, { compilerOptions: { baseUrl: 'app/src' } })
-    expect(result.json).toMatchInlineSnapshot(`
-      [
-        {
-          "data": [
-            {
-              "flex": 2,
+              "bg": "red.300",
+              "bgColor": "[rgb(51 155 240)]",
+              "borderColor": "[rgb(51 155 240)!important]",
+              "color": "[#fff]",
+              "outlineColor": "[rgb(51 155 240)!]",
             },
           ],
           "name": "css",
           "type": "object",
         },
-        {
-          "data": [
-            {
-              "flex": 1,
-            },
-          ],
-          "name": "css",
-          "type": "object",
-        },
-        {
-          "data": [
-            {
-              "display": "flex",
-              "flexDir": {
-                "_print": "row",
-                "base": "column",
-                "sm": "row",
-              },
-              "height": {
-                "_print": "297mm",
-                "base": "600px",
-              },
-              "margin": "auto",
-              "page": "A4",
-              "width": {
-                "_print": "210mm",
-              },
-            },
-          ],
-          "name": "container",
-          "type": "pattern",
-        },
       ]
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
       "@layer utilities {
-        .flex_2 {
-          flex: 2
+        .text_\\\\[\\\\#fff\\\\] {
+          color: #fff
           }
 
-        .flex_1 {
-          flex: 1 1 0%
+        .bg_red\\\\.300 {
+          background: var(--colors-red-300)
           }
 
-        .pos_relative {
-          position: relative
+        .bg_\\\\[rgb\\\\(51_155_240\\\\)\\\\] {
+          background-color: rgb(51 155 240)
           }
 
-        .max-w_8xl {
-          max-width: var(--sizes-8xl)
+        .ring_\\\\[rgb\\\\(51_155_240\\\\)\\\\]\\\\! {
+          outline-color: rgb(51 155 240) !important
           }
 
-        .mx_auto {
-          margin-inline: auto
+        .border_\\\\[rgb\\\\(51_155_240\\\\)\\\\]\\\\! {
+          border-color: rgb(51 155 240) !important
           }
-
-        .px_4 {
-          padding-inline: var(--spacing-4)
-          }
-
-        .page_A4 {
-          page: A4
-          }
-
-        .h_600px {
-          height: 600px
-          }
-
-        .d_flex {
-          display: flex
-          }
-
-        .m_auto {
-          margin: auto
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        @media screen and (min-width: 40em) {
-          .sm\\\\:flex_row {
-            flex-direction: row
-          }
-              }
-
-        @media screen and (min-width: 48em) {
-          .md\\\\:px_6 {
-            padding-inline: var(--spacing-6)
-          }
-              }
-
-        @media screen and (min-width: 64em) {
-          .lg\\\\:px_8 {
-            padding-inline: var(--spacing-8)
-          }
-              }
-
-        @media print {
-          .print\\\\:w_210mm {
-            width: 210mm
-          }
-
-          .print\\\\:h_297mm {
-            height: 297mm
-          }
-
-          .print\\\\:flex_row {
-            flex-direction: row
-          }
-              }
       }"
     `)
   })
 
-  test('{fn}.raw', () => {
+  test('recipe.staticCss', () => {
+    const { generator } = parseAndExtract('', {
+      theme: {
+        extend: {
+          recipes: {
+            textStyle: {
+              staticCss: [{ size: ['h1'] }],
+            },
+          },
+        },
+      },
+    })
+
+    generator.appendCss('static')
+    const css = generator.stylesheet.getLayerCss('recipes')
+
+    expect(css).toMatchInlineSnapshot(`
+      "@layer recipes {
+        .textStyle--size_h1 {
+          font-size: 5rem;
+          line-height: 1em;
+          font-weight: 800
+          }
+
+        @layer _base {
+
+          .textStyle {
+            font-family: var(--fonts-mono);
+              }
+            .textStyle > :not([hidden]) ~ :not([hidden]) {
+              border-inline-start-width: 20px;
+              border-inline-end-width: 0px
+                  }
+          }
+      }"
+    `)
+  })
+
+  test('slotRecipes.staticCss', () => {
+    const { generator } = parseAndExtract('', {
+      theme: {
+        extend: {
+          slotRecipes: {
+            someRecipe: {
+              staticCss: [{ size: ['sm'] }],
+              className: 'button',
+              slots: ['container', 'icon'],
+              base: {
+                container: {
+                  fontFamily: 'mono',
+                },
+                icon: {
+                  fontSize: '1.5rem',
+                },
+              },
+              variants: {
+                size: {
+                  sm: {
+                    container: {
+                      fontSize: '5rem',
+                      lineHeight: '1em',
+                    },
+                    icon: {
+                      fontSize: '2rem',
+                    },
+                  },
+
+                  md: {
+                    container: {
+                      fontSize: '3rem',
+                      lineHeight: '1.2em',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    generator.appendCss('static')
+    const css = generator.stylesheet.getLayerCss('recipes')
+
+    expect(css).toMatchInlineSnapshot(`
+      "@layer recipes.slots {
+        .button__container--size_sm {
+          font-size: 5rem;
+          line-height: 1em
+          }
+
+        .button__icon--size_sm {
+          font-size: 2rem
+          }
+
+        @layer _base {
+
+          .button__container {
+            font-family: var(--fonts-mono)
+              }
+
+          .button__icon {
+            font-size: 1.5rem
+              }
+          }
+      }"
+    `)
+  })
+
+  test('recipe issue', () => {
     const code = `
-    import { css } from ".panda/css";
-    import { buttonStyle } from ".panda/recipes";
-    import { stack } from ".panda/patterns";
+    import { css } from '.panda/css';
+    import { styled } from '.panda/jsx';
+    import { cardStyle2  } from '.panda/recipes';
+    import { cardStyle } from '.panda/recipes';
 
-    const filePath = String.raw\`C:\\Development\\profile\\aboutme.html\`;
+    const CardStyle = styled("div", cardStyle)
+    const CardStyle2 = styled("div", cardStyle2)
 
-    css.raw({ mx: '3', paddingTop: '4', color: 'amber.100' }, { mx: '10', pt: '6', color: 'blue.950' })
-
-    export default function App() {
+    export const App = () => {
       return (
-        <ButtonStyle rootProps={css.raw({ bg: "red.400" })} />
-      );
-    }
+        <CardStyle rounded={true}>Card rounded={"true"}</CardStyle>
+        <CardStyle rounded={false}>Card rounded={"false"}</CardStyle>
 
-    // recipe in storybook
-    export const Funky: Story = {
-      args: buttonStyle.raw({
-        visual: "funky",
-        shape: "circle",
-        size: "sm",
-      }),
+        <CardStyle2 isRounded={true}>Card2 isRounded={"true"}</CardStyle2>
+        <CardStyle2 isRounded={false}>Card2 isRounded={"false"}</CardStyle2>
+      );
     };
 
-    // mixed with pattern
-    const stackProps = {
-      sm: stack.raw({ direction: "column" }),
-      md: stack.raw({ direction: "row" })
-    }
-
-    stack(stackProps[props.size]))
-
      `
-    const result = run(code)
+    const result = parseAndExtract(code)
     expect(result.json).toMatchInlineSnapshot(`
       [
         {
           "data": [
-            {
-              "color": "amber.100",
-              "mx": "3",
-              "paddingTop": "4",
-            },
-            {
-              "color": "blue.950",
-              "mx": "10",
-              "pt": "6",
-            },
+            {},
           ],
-          "name": "css",
-          "type": "object",
-        },
-        {
-          "data": [
-            {
-              "bg": "red.400",
-            },
-          ],
-          "name": "css",
-          "type": "object",
+          "name": "CardStyle2",
+          "type": "jsx",
         },
         {
           "data": [
             {},
           ],
-          "name": "ButtonStyle",
+          "name": "CardStyle2",
+          "type": "jsx",
+        },
+        {
+          "data": [
+            {
+              "rounded": true,
+            },
+          ],
+          "name": "CardStyle",
           "type": "jsx-recipe",
         },
         {
           "data": [
             {
-              "shape": "circle",
-              "size": "sm",
-              "visual": "funky",
+              "rounded": false,
             },
           ],
-          "name": "buttonStyle",
-          "type": "recipe",
-        },
-        {
-          "data": [
-            {
-              "direction": "column",
-            },
-          ],
-          "name": "stack",
-          "type": "pattern",
-        },
-        {
-          "data": [
-            {
-              "direction": "row",
-            },
-          ],
-          "name": "stack",
-          "type": "pattern",
-        },
-        {
-          "data": [
-            {},
-          ],
-          "name": "stack",
-          "type": "pattern",
+          "name": "CardStyle",
+          "type": "jsx-recipe",
         },
       ]
     `)
 
     expect(result.css).toMatchInlineSnapshot(`
-      "@layer utilities {
-        .mx_3 {
-          margin-inline: var(--spacing-3)
-          }
-
-        .pt_4 {
-          padding-top: var(--spacing-4)
-          }
-
-        .text_amber\\\\.100 {
-          color: var(--colors-amber-100)
-          }
-
-        .mx_10 {
-          margin-inline: var(--spacing-10)
-          }
-
-        .pt_6 {
-          padding-top: var(--spacing-6)
-          }
-
-        .text_blue\\\\.950 {
-          color: var(--colors-blue-950)
-          }
-
-        .bg_red\\\\.400 {
-          background: var(--colors-red-400)
-          }
-
-        .flex_row {
-          flex-direction: row
-          }
-
-        .d_flex {
-          display: flex
-          }
-
-        .flex_column {
-          flex-direction: column
-          }
-
-        .gap_10px {
-          gap: 10px
-          }
-      }
-
-      @layer recipes {
-        .buttonStyle--size_md {
-          height: 3rem;
-          min-width: 3rem;
-          padding: 0 0.75rem
-          }
-
-        .buttonStyle--size_sm {
-          height: 2.5rem;
-          min-width: 2.5rem;
-          padding: 0 0.5rem
-          }
-
-        .buttonStyle--variant_solid {
-          background-color: blue;
-          color: var(--colors-white);
-          }
-
-        .buttonStyle--variant_solid[data-disabled] {
-          background-color: gray;
-          color: var(--colors-black)
-              }
-
-        .buttonStyle--variant_solid:is(:hover, [data-hover]) {
-          background-color: darkblue
-              }
-
-        @layer _base {
-          .buttonStyle {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center
-              }
+      "@layer recipes {
+        .card--rounded_true {
+          border-radius: 0.375rem
           }
       }"
     `)

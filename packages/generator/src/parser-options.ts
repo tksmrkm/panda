@@ -3,8 +3,18 @@ import type { Context } from './engines'
 import type { PatternDetail } from './engines/pattern'
 import type { RecipeNode } from '@pandacss/core'
 
-const getImportMap = (outdir: string, configImportMap?: OutdirImportMap): ParserImportMap => {
+const getImportMap = (outdir: string, configImportMap?: string | OutdirImportMap): ParserImportMap => {
+  if (typeof configImportMap === 'string') {
+    return {
+      css: [configImportMap, 'css'],
+      recipe: [configImportMap, 'recipes'],
+      pattern: [configImportMap, 'patterns'],
+      jsx: [configImportMap, 'jsx'],
+    }
+  }
+
   const { css, recipes, patterns, jsx } = configImportMap ?? {}
+
   return {
     css: css ? [css] : [outdir, 'css'],
     recipe: recipes ? [recipes] : [outdir, 'recipes'],
@@ -14,7 +24,8 @@ const getImportMap = (outdir: string, configImportMap?: OutdirImportMap): Parser
 }
 
 export const getParserOptions = (ctx: Context): ParserOptions => {
-  const { config, jsx, isValidProperty, patterns, recipes, tsconfig, tsOptions } = ctx
+  const { config, jsx, isValidProperty, patterns, recipes } = ctx
+  const { tsconfig, tsOptions } = ctx.conf
 
   const compilerOptions = tsconfig?.compilerOptions ?? {}
   const baseUrl = compilerOptions.baseUrl ?? ''

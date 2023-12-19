@@ -1,5 +1,55 @@
 # @pandacss/postcss
 
+## 0.22.1
+
+### Patch Changes
+
+- 0f7793c7: Fix a regression with the @pandacss/astro integration where the automatically provided `base.css` would be
+  ignored by the @pandacss/postcss plugin
+  - @pandacss/node@0.22.1
+
+## 0.22.0
+
+### Patch Changes
+
+- Updated dependencies [a2f6c2c8]
+- Updated dependencies [11753fea]
+  - @pandacss/node@0.22.0
+
+## 0.21.0
+
+### Patch Changes
+
+- Updated dependencies [7f846be2]
+  - @pandacss/node@0.21.0
+
+## 0.20.1
+
+### Patch Changes
+
+- @pandacss/node@0.20.1
+
+## 0.20.0
+
+### Patch Changes
+
+- 24ee49a5: - Add support for granular config change detection
+  - Improve the `codegen` experience by only rewriting files affecteds by a config change
+- Updated dependencies [24ee49a5]
+  - @pandacss/node@0.20.0
+
+## 0.19.0
+
+### Patch Changes
+
+- @pandacss/node@0.19.0
+
+## 0.18.3
+
+### Patch Changes
+
+- @pandacss/node@0.18.3
+
 ## 0.18.2
 
 ### Patch Changes

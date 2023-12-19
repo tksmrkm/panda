@@ -8,23 +8,23 @@ import {
   withoutImportant,
 } from '@pandacss/shared'
 import type { Dict } from '@pandacss/types'
-import type { Root } from 'postcss'
-import postcss from 'postcss'
+import postcss, { Container } from 'postcss'
 import { toCss } from './to-css'
-import type { StylesheetContext } from './types'
+import type { AtomicRuleContext } from './types'
 
 export interface ProcessOptions {
   styles: Dict
 }
 
-export class AtomicRule {
-  root: Root
-  layer: string
+const urlRegex = /^https?:\/\//
 
-  constructor(private context: StylesheetContext) {
-    this.root = postcss.root()
-    this.layer = context.layers.utilities
-  }
+interface WriteOptions {
+  layer: string | undefined
+  rule: Container
+}
+
+export class AtomicRule {
+  constructor(private context: AtomicRuleContext, private fn: (opts: WriteOptions) => void) {}
 
   hashFn = (conditions: string[], className: string) => {
     const { conditions: cond, hash, utility } = this.context
@@ -47,11 +47,14 @@ export class AtomicRule {
     return this.context?.transform ?? this.context.utility.transform
   }
 
+  normalize = (styles: Dict, normalizeShorthand = true) => {
+    return normalizeStyleObject(styles, this.context, normalizeShorthand) as Dict
+  }
+
   process = (options: ProcessOptions) => {
-    const { styles } = options
+    const { styles: styleObject } = options
     const { conditions: cond } = this.context
 
-    const styleObject = normalizeStyleObject(styles, this.context)
     // shouldn't happen, but just in case
     if (typeof styleObject !== 'object') return
 
@@ -60,6 +63,11 @@ export class AtomicRule {
     walkObject(styleObject, (value, paths) => {
       // if value doesn't exist
       if (value == null) return
+
+      // we don't want to extract and generate invalid CSS for urls
+      if (urlRegex.test(value)) {
+        return
+      }
 
       const important = isImportant(value)
 
@@ -89,32 +97,35 @@ export class AtomicRule {
       // apply css conditions
       rule.applyConditions(conditions)
 
-      // append the rule to the root
-      if (transformed.layer) {
-        // if layer is specified, create a new root with the layer name
-        const atRule = postcss.atRule({
-          name: 'layer',
-          params: transformed.layer,
-          nodes: [rule.rule!],
-        })
-        this.root.append(atRule)
-        //
-      } else {
-        this.root.append(rule.rule!)
-      }
+      const styleRule = rule.rule!
+
+      this.fn({ layer: transformed.layer, rule: styleRule })
     })
-
-    if (this.root.nodes.length === 0) return
-
-    const atRule = postcss.atRule({
-      name: 'layer',
-      params: this.layer,
-      nodes: [this.root],
-    })
-    this.context.root.append(atRule)
   }
+}
 
-  toCss = () => {
-    return this.context.root.toString()
-  }
+export function createRecipeAtomicRule(ctx: AtomicRuleContext, slot?: boolean) {
+  return new AtomicRule(ctx, ({ rule, layer }) => {
+    if (layer === '_base' && slot) {
+      ctx.layers.slotRecipes.base.append(rule)
+    } else if (slot) {
+      ctx.layers.slotRecipes.root.append(rule)
+    } else if (layer === '_base') {
+      ctx.layers.recipes.base.append(rule)
+    } else {
+      ctx.layers.recipes.root.append(rule)
+    }
+  })
+}
+
+export function createAtomicRule(ctx: AtomicRuleContext) {
+  return new AtomicRule(ctx, ({ layer, rule }) => {
+    if (layer === 'composition') {
+      ctx.layers.utilities.compositions.append(rule)
+    } else if (typeof layer === 'string') {
+      ctx.layers.utilities.custom(layer).append(rule)
+    } else {
+      ctx.layers.utilities.root.append(rule)
+    }
+  })
 }

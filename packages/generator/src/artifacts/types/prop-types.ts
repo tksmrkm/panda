@@ -7,9 +7,7 @@ export function generatePropTypes(ctx: Context) {
     utility,
   } = ctx
 
-  const strictText = `${strictTokens ? '' : ' | CssValue<T>'}`
-
-  const result: string[] = [
+  const result = [
     outdent`
     ${ctx.file.importType('ConditionalValue', './conditions')}
     ${ctx.file.importType('CssProperties', './system-types')}
@@ -29,7 +27,9 @@ export function generatePropTypes(ctx: Context) {
   result.push(`
   type CssValue<T> = T extends keyof CssProperties ? CssProperties[T] : never
 
-  type Shorthand<T> = T extends keyof PropertyValueTypes ? PropertyValueTypes[T]${strictText} : CssValue<T>
+  type Shorthand<T> = T extends keyof PropertyValueTypes ? PropertyValueTypes[T]${
+    strictTokens ? '' : ' | CssValue<T>'
+  } : CssValue<T>
 
   export interface PropertyTypes extends PropertyValueTypes {
   `)
@@ -43,10 +43,43 @@ export function generatePropTypes(ctx: Context) {
   return outdent`
   ${result.join('\n')}
 
+  ${
+    strictTokens
+      ? `
+  type FilterString<T> = T extends \`\${infer _}\` ? T : never;
+  type WithArbitraryValue<T> = T | \`[\${string}]\`
+  type PropOrCondition<T> = ConditionalValue<WithArbitraryValue<T>>;
+
+  type PropertyTypeValue<T extends string> = T extends keyof PropertyTypes
+    ? PropOrCondition<FilterString<PropertyTypes[T]>>
+    : never;
+
+  type CssPropertyValue<T extends string> = T extends keyof CssProperties
+    ? PropOrCondition<FilterString<CssProperties[T]>>
+    : never;
+
   export type PropertyValue<T extends string> = T extends keyof PropertyTypes
-    ? ConditionalValue<PropertyTypes[T]${strictText}${!ctx.config.strictTokens ? ' | (string & {})' : ''}>
+    ? PropertyTypeValue<T>
     : T extends keyof CssProperties
-    ? ConditionalValue<CssProperties[T]${!ctx.config.strictTokens ? ' | (string & {})' : ''}>
-    : ConditionalValue<string | number>
+      ? CssPropertyValue<T>
+      : PropOrCondition<string | number>
+    `
+      : `
+
+  type PropertyTypeValue<T extends string> = T extends keyof PropertyTypes
+    ? ConditionalValue<PropertyTypes[T] | CssValue<T> | (string & {})>
+    : never;
+
+  type CssPropertyValue<T extends string> = T extends keyof CssProperties
+    ? ConditionalValue<CssProperties[T] | (string & {})>
+    : never;
+
+  export type PropertyValue<T extends string> = T extends keyof PropertyTypes
+    ? PropertyTypeValue<T>
+    : T extends keyof CssProperties
+      ? CssPropertyValue<T>
+      : ConditionalValue<string | number>
+  `
+  }
   `
 }

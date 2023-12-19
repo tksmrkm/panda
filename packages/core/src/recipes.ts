@@ -1,10 +1,10 @@
 import { capitalize, createRegex, dashCase, getSlotRecipes, memo, splitProps } from '@pandacss/shared'
-import type { Dict, RecipeConfig, SlotRecipeConfig, SystemStyleObject } from '@pandacss/types'
+import type { ArtifactFilters, Dict, RecipeConfig, SlotRecipeConfig, SystemStyleObject } from '@pandacss/types'
 import merge from 'lodash.merge'
-import { AtomicRule, type ProcessOptions } from './atomic-rule'
+import { AtomicRule, createRecipeAtomicRule, type ProcessOptions } from './atomic-rule'
 import { isSlotRecipe } from './is-slot-recipe'
 import { serializeStyle } from './serialize'
-import type { RecipeNode, StylesheetContext } from './types'
+import type { RecipeContext, RecipeNode } from './types'
 
 interface RecipeRecord {
   [key: string]: RecipeConfig | SlotRecipeConfig
@@ -35,10 +35,13 @@ export class Recipes {
    */
   rules: Map<string, AtomicRule> = new Map()
 
-  keys: string[] = []
+  get keys() {
+    return Object.keys(this.recipes)
+  }
 
-  constructor(private recipes: RecipeRecord = {}, private context: StylesheetContext) {
-    this.assignRules()
+  constructor(private recipes: RecipeRecord = {}, private context: RecipeContext) {
+    this.prune()
+    this.save()
   }
 
   private getPropKey = (recipe: string, variant: string, value: any) => {
@@ -53,29 +56,53 @@ export class Recipes {
     return `${className}--${variant}${this.separator}${value}`
   }
 
+  // check this.recipes against sharedState.nodes
+  // and remove any recipes (in sharedState) that are no longer in use
+  prune = () => {
+    const recipeNames = Object.keys(this.recipes)
+    const cachedRecipeNames = Array.from(sharedState.nodes.keys())
+    const removedRecipes = cachedRecipeNames.filter((name) => !recipeNames.includes(name))
+    removedRecipes.forEach((name) => {
+      this.remove(name)
+    })
+  }
+
   save = () => {
     for (const [name, recipe] of Object.entries(this.recipes)) {
-      if (isSlotRecipe(recipe)) {
-        // extract recipes for each slot
-        const slots = getSlotRecipes(recipe)
-
-        const slotsMap = new Map()
-
-        // normalize each recipe
-        Object.entries(slots).forEach(([slot, slotRecipe]) => {
-          const slotName = this.getSlotKey(name, slot)
-          this.normalize(slotName, slotRecipe)
-          slotsMap.set(slotName, slotRecipe)
-        })
-
-        // save the root recipe
-        this.assignRecipe(name, recipe)
-        sharedState.slots.set(name, slotsMap)
-        //
-      } else {
-        this.assignRecipe(name, this.normalize(name, recipe))
-      }
+      this.saveOne(name, recipe)
     }
+  }
+
+  saveOne = (name: string, recipe: RecipeConfig | SlotRecipeConfig) => {
+    if (isSlotRecipe(recipe)) {
+      // extract recipes for each slot
+      const slots = getSlotRecipes(recipe)
+
+      const slotsMap = new Map()
+
+      // normalize each recipe
+      Object.entries(slots).forEach(([slot, slotRecipe]) => {
+        const slotName = this.getSlotKey(name, slot)
+        this.normalize(slotName, slotRecipe)
+        slotsMap.set(slotName, slotRecipe)
+        this.rules.set(slotName, this.createRule(slotName, true))
+      })
+
+      // save the root recipe
+      this.assignRecipe(name, recipe)
+      sharedState.slots.set(name, slotsMap)
+      //
+    } else {
+      this.assignRecipe(name, this.normalize(name, recipe))
+      this.rules.set(name, this.createRule(name))
+    }
+  }
+
+  remove(name: string) {
+    this.rules.delete(name)
+    sharedState.nodes.delete(name)
+    sharedState.classNames.delete(name)
+    sharedState.styles.delete(name)
   }
 
   private assignRecipe = (name: string, recipe: RecipeConfig | SlotRecipeConfig) => {
@@ -109,27 +136,6 @@ export class Recipes {
 
   getSlotKey = (name: string, slot: string) => {
     return `${name}__${slot}`
-  }
-
-  assignRules = () => {
-    if (!this.context) return
-
-    for (const [name, recipe] of Object.entries(this.recipes)) {
-      //
-      if (isSlotRecipe(recipe)) {
-        //
-        recipe.slots.forEach((slotName) => {
-          const slotKey = this.getSlotKey(name, slotName)
-          this.rules.set(slotKey, this.createRule(slotKey, true))
-        })
-        //
-      } else {
-        //
-        this.rules.set(name, this.createRule(name))
-      }
-
-      this.keys.push(name)
-    }
   }
 
   isEmpty = () => {
@@ -180,6 +186,7 @@ export class Recipes {
       defaultVariants = {},
       description = '',
       compoundVariants = [],
+      staticCss = [],
     } = config
 
     const recipe: Required<RecipeConfig> = {
@@ -191,6 +198,7 @@ export class Recipes {
       variants: {},
       defaultVariants,
       compoundVariants,
+      staticCss,
     }
 
     recipe.base = this.serialize(base)
@@ -246,13 +254,13 @@ export class Recipes {
       throw new Error("Can't create a rule without a context")
     }
 
-    const rule = new AtomicRule({
+    const context = {
       ...this.context,
       transform: this.getTransform(name),
-    })
+    }
 
-    const layer = this.context.layers.recipes
-    rule.layer = slot ? `${layer}.slots` : layer
+    const rule = createRecipeAtomicRule(context, slot)
+
     return rule
   }
 
@@ -280,7 +288,10 @@ export class Recipes {
         if (isEmpty) return
 
         const rule = this.rules.get(slotKey)
-        rule?.process({ styles })
+        if (!rule) return
+
+        const normalizedStyles = rule?.normalize(styles, false)
+        rule.process({ styles: normalizedStyles })
       })
       //
     } else {
@@ -289,13 +300,16 @@ export class Recipes {
       if (isEmpty) return
 
       const rule = this.rules.get(recipeName)
-      rule?.process({ styles })
+      if (!rule) return
+
+      const normalizedStyles = rule.normalize(styles, false)
+      rule.process({ styles: normalizedStyles })
       //
     }
   }
 
-  toCss = () => {
-    if (!this.context) return ''
-    return this.context.root.toString()
+  filterDetails = (filters?: ArtifactFilters) => {
+    const recipeDiffs = filters?.affecteds?.recipes
+    return recipeDiffs ? this.details.filter((recipe) => recipeDiffs.includes(recipe.dashName)) : this.details
   }
 }

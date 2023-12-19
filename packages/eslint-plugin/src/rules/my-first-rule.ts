@@ -1,6 +1,9 @@
 import { type Rule } from 'eslint'
 
+export const RULE_NAME = 'my-first-rule'
+
 const rule: Rule.RuleModule = {
+  // name: RULE_NAME,
   meta: {
     docs: {
       description: 'This rule is run on typescript!',

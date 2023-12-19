@@ -1,5 +1,164 @@
 # @pandacss/node
 
+## 0.22.1
+
+### Patch Changes
+
+- Updated dependencies [8f4ce97c]
+- Updated dependencies [647f05c9]
+- Updated dependencies [647f05c9]
+  - @pandacss/generator@0.22.1
+  - @pandacss/types@0.22.1
+  - @pandacss/parser@0.22.1
+  - @pandacss/shared@0.22.1
+  - @pandacss/config@0.22.1
+  - @pandacss/core@0.22.1
+  - @pandacss/token-dictionary@0.22.1
+  - @pandacss/error@0.22.1
+  - @pandacss/extractor@0.22.1
+  - @pandacss/is-valid-prop@0.22.1
+  - @pandacss/logger@0.22.1
+
+## 0.22.0
+
+### Patch Changes
+
+- a2f6c2c8: Fix potential cross-platform issues with path resolving by using `pathe` instead of `path`
+- 11753fea: Improve initial css extraction time by at least 5x 🚀
+
+  Initial extraction time can get slow when using static CSS with lots of recipes or parsing a lot of files.
+
+  **Scenarios**
+
+  - Park UI went from 3500ms to 580ms (6x faster)
+  - Panda Website went from 2900ms to 208ms (14x faster)
+
+  **Potential Breaking Change**
+
+  If you use `hooks` in your `panda.config` file to listen for when css is extracted, we no longer return the `css`
+  string for performance reasons. We might reconsider this in the future.
+
+- Updated dependencies [526c6e34]
+- Updated dependencies [8db47ec6]
+- Updated dependencies [9c0d3f8f]
+- Updated dependencies [11753fea]
+- Updated dependencies [c95c40bd]
+- Updated dependencies [e83afef0]
+  - @pandacss/types@0.22.0
+  - @pandacss/generator@0.22.0
+  - @pandacss/shared@0.22.0
+  - @pandacss/core@0.22.0
+  - @pandacss/config@0.22.0
+  - @pandacss/parser@0.22.0
+  - @pandacss/token-dictionary@0.22.0
+  - @pandacss/error@0.22.0
+  - @pandacss/extractor@0.22.0
+  - @pandacss/is-valid-prop@0.22.0
+  - @pandacss/logger@0.22.0
+
+## 0.21.0
+
+### Patch Changes
+
+- 7f846be2: Add `configPath` and `cwd` options in the `@pandacss/astro` integration just like in the `@pandacss/postcss`
+
+  This can be useful with Nx monorepos where the `panda.config.ts` is not in the root of the project.
+
+- Updated dependencies [1464460f]
+- Updated dependencies [788aaba3]
+- Updated dependencies [26e6051a]
+- Updated dependencies [5b061615]
+- Updated dependencies [d81dcbe6]
+- Updated dependencies [105f74ce]
+- Updated dependencies [052283c2]
+  - @pandacss/extractor@0.21.0
+  - @pandacss/core@0.21.0
+  - @pandacss/generator@0.21.0
+  - @pandacss/shared@0.21.0
+  - @pandacss/types@0.21.0
+  - @pandacss/parser@0.21.0
+  - @pandacss/config@0.21.0
+  - @pandacss/token-dictionary@0.21.0
+  - @pandacss/error@0.21.0
+  - @pandacss/is-valid-prop@0.21.0
+  - @pandacss/logger@0.21.0
+
+## 0.20.1
+
+### Patch Changes
+
+- @pandacss/config@0.20.1
+- @pandacss/parser@0.20.1
+- @pandacss/core@0.20.1
+- @pandacss/generator@0.20.1
+- @pandacss/token-dictionary@0.20.1
+- @pandacss/error@0.20.1
+- @pandacss/extractor@0.20.1
+- @pandacss/is-valid-prop@0.20.1
+- @pandacss/logger@0.20.1
+- @pandacss/shared@0.20.1
+- @pandacss/types@0.20.1
+
+## 0.20.0
+
+### Patch Changes
+
+- 24ee49a5: - Add support for granular config change detection
+  - Improve the `codegen` experience by only rewriting files affecteds by a config change
+- Updated dependencies [e4fdc64a]
+- Updated dependencies [24ee49a5]
+- Updated dependencies [4ba982f3]
+- Updated dependencies [904aec7b]
+  - @pandacss/generator@0.20.0
+  - @pandacss/config@0.20.0
+  - @pandacss/parser@0.20.0
+  - @pandacss/types@0.20.0
+  - @pandacss/core@0.20.0
+  - @pandacss/token-dictionary@0.20.0
+  - @pandacss/error@0.20.0
+  - @pandacss/extractor@0.20.0
+  - @pandacss/is-valid-prop@0.20.0
+  - @pandacss/logger@0.20.0
+  - @pandacss/shared@0.20.0
+
+## 0.19.0
+
+### Patch Changes
+
+- Updated dependencies [61831040]
+- Updated dependencies [92a7fbe5]
+- Updated dependencies [89f86923]
+- Updated dependencies [402afbee]
+- Updated dependencies [9f5711f9]
+  - @pandacss/generator@0.19.0
+  - @pandacss/types@0.19.0
+  - @pandacss/core@0.19.0
+  - @pandacss/parser@0.19.0
+  - @pandacss/config@0.19.0
+  - @pandacss/token-dictionary@0.19.0
+  - @pandacss/error@0.19.0
+  - @pandacss/extractor@0.19.0
+  - @pandacss/is-valid-prop@0.19.0
+  - @pandacss/logger@0.19.0
+  - @pandacss/shared@0.19.0
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [78b940b2]
+  - @pandacss/generator@0.18.3
+  - @pandacss/parser@0.18.3
+  - @pandacss/config@0.18.3
+  - @pandacss/core@0.18.3
+  - @pandacss/error@0.18.3
+  - @pandacss/extractor@0.18.3
+  - @pandacss/is-valid-prop@0.18.3
+  - @pandacss/logger@0.18.3
+  - @pandacss/shared@0.18.3
+  - @pandacss/token-dictionary@0.18.3
+  - @pandacss/types@0.18.3
+
 ## 0.18.2
 
 ### Patch Changes

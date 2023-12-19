@@ -25,7 +25,7 @@ export const artifactsGenerated = (ctx: Context) => {
       !patterns.isEmpty() &&
         !ctx.isTemplateLiteralSyntax &&
         outdent`
-    ${tick} ${quote(outdir, '/patterns')}: functions to implement apply common layout patterns
+    ${tick} ${quote(outdir, '/patterns')}: functions to implement and apply common layout patterns
     `,
       !recipes.isEmpty() &&
         outdent`
@@ -92,6 +92,8 @@ export const buildComplete = (count: number) =>
   Successfully extracted css from ${count} file(s) ✨
   `
 
+export const cssArtifactComplete = (type: string) => `Successfully generated ${type} css artifact ✨`
+
 export const getMessages = (ctx: Context) => ({
   artifactsGenerated: artifactsGenerated(ctx),
   configExists,
@@ -101,4 +103,5 @@ export const getMessages = (ctx: Context) => ({
   watch,
   buildComplete,
   configWatch,
+  cssArtifactComplete,
 })

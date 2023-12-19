@@ -1,5 +1,131 @@
 # @pandacss/types
 
+## 0.22.1
+
+### Patch Changes
+
+- 8f4ce97c: Fix `slotRecipes` typings,
+  [the recently added `recipe.staticCss`](https://github.com/chakra-ui/panda/pull/1765) added to `config.recipes`
+  weren't added to `config.slotRecipes`
+
+## 0.22.0
+
+### Patch Changes
+
+- 526c6e34: Fix issue where static-css types was not exported.
+
+## 0.21.0
+
+### Patch Changes
+
+- 5b061615: Add a shortcut for the `config.importMap` option
+
+  You can now also use a string to customize the base import path and keep the default entrypoints:
+
+  ```json
+  {
+    "importMap": "@scope/styled-system"
+  }
+  ```
+
+  is the equivalent of:
+
+  ```json
+  {
+    "importMap": {
+      "css": "@scope/styled-system/css",
+      "recipes": "@scope/styled-system/recipes",
+      "patterns": "@scope/styled-system/patterns",
+      "jsx": "@scope/styled-system/jsx"
+    }
+  }
+  ```
+
+- 105f74ce: Add a way to specify a recipe's `staticCss` options from inside a recipe config, e.g.:
+
+  ```js
+  import { defineRecipe } from '@pandacss/dev'
+
+  const card = defineRecipe({
+    className: 'card',
+    base: { color: 'white' },
+    variants: {
+      size: {
+        small: { fontSize: '14px' },
+        large: { fontSize: '18px' },
+      },
+    },
+    staticCss: [{ size: ['*'] }],
+  })
+  ```
+
+  would be the equivalent of defining it inside the main config:
+
+  ```js
+  import { defineConfig } from '@pandacss/dev'
+
+  export default defineConfig({
+    // ...
+    staticCss: {
+      recipes: {
+        card: {
+          size: ['*'],
+        },
+      },
+    },
+  })
+  ```
+
+## 0.20.1
+
+## 0.20.0
+
+### Minor Changes
+
+- 904aec7b: - Add support for `staticCss` in presets allowing you create sharable, pre-generated styles
+
+  - Add support for extending `staticCss` defined in presets
+
+  ```jsx
+  const presetWithStaticCss = definePreset({
+    staticCss: {
+      recipes: {
+        // generate all button styles and variants
+        button: ['*'],
+      },
+    },
+  })
+
+  export default defineConfig({
+    presets: [presetWithStaticCss],
+    staticCss: {
+      extend: {
+        recipes: {
+          // extend and pre-generate all sizes for card
+          card: [{ size: ['small', 'medium', 'large'] }],
+        },
+      },
+    },
+  })
+  ```
+
+### Patch Changes
+
+- 24ee49a5: - Add support for granular config change detection
+  - Improve the `codegen` experience by only rewriting files affecteds by a config change
+
+## 0.19.0
+
+### Patch Changes
+
+- 61831040: Fix issue where typescript error is shown in recipes when `exactOptionalPropertyTypes` is set.
+
+  > To learn more about this issue, see [this issue](https://github.com/chakra-ui/panda/issues/1688)
+
+- 89f86923: Fix issue where css variables were not supported in layer styles and text styles types.
+
+## 0.18.3
+
 ## 0.18.2
 
 ## 0.18.1

@@ -2,7 +2,7 @@
   "extends": "next/core-web-vitals",
   "parser": "@typescript-eslint/parser",
   "plugins": [
-    "@pandacss"
+    "@pandacss/eslint-plugin"
   ],
   "rules": {
     "@pandacss/my-first-rule": "error"

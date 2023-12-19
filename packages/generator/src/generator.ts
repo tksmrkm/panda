@@ -1,68 +1,67 @@
-import type { Artifact, ConfigResultWithHooks, ParserResultType } from '@pandacss/types'
+import type { ArtifactId, ConfigResultWithHooks, ParserResultType } from '@pandacss/types'
+import { match } from 'ts-pattern'
 import { generateArtifacts } from './artifacts'
-import { generateFlattenedCss, type FlattenedCssOptions } from './artifacts/css/flat-css'
 import { generateGlobalCss } from './artifacts/css/global-css'
 import { generateKeyframeCss } from './artifacts/css/keyframe-css'
 import { generateParserCss } from './artifacts/css/parser-css'
 import { generateResetCss } from './artifacts/css/reset-css'
 import { generateStaticCss } from './artifacts/css/static-css'
 import { generateTokenCss } from './artifacts/css/token-css'
-import { getEngine, type Context } from './engines'
+import { Context } from './engines'
 import { getMessages } from './messages'
 import { getParserOptions, type ParserOptions } from './parser-options'
 
-const defaults = (conf: ConfigResultWithHooks): ConfigResultWithHooks => ({
-  ...conf,
-  config: {
-    cssVarRoot: ':where(:root, :host)',
-    jsxFactory: 'styled',
-    jsxStyleProps: 'all',
-    outExtension: 'mjs',
-    shorthands: true,
-    syntax: 'object-literal',
-    ...conf.config,
-    layers: {
-      reset: 'reset',
-      base: 'base',
-      tokens: 'tokens',
-      recipes: 'recipes',
-      utilities: 'utilities',
-      ...conf.config.layers,
-    },
-  },
-})
+export type CssArtifactType = 'preflight' | 'tokens' | 'static' | 'global' | 'keyframes'
 
-export const createGenerator = (conf: ConfigResultWithHooks): Generator => {
-  const ctx = getEngine(defaults(conf))
-  const parserOptions = getParserOptions(ctx)
-
-  return {
-    ...ctx,
-    getArtifacts: generateArtifacts(ctx),
-    //
-    getStaticCss: generateStaticCss,
-    getResetCss: generateResetCss,
-    getTokenCss: generateTokenCss,
-    getKeyframeCss: generateKeyframeCss,
-    getGlobalCss: generateGlobalCss,
-    //
-    getCss: generateFlattenedCss(ctx),
-    getParserCss: generateParserCss(ctx),
-    //
-    messages: getMessages(ctx),
-    parserOptions,
-  }
-}
-
-export interface Generator extends Context {
-  getArtifacts: () => Artifact[]
-  getStaticCss: (ctx: Context) => string
-  getResetCss: (ctx: Context) => string
-  getTokenCss: (ctx: Context) => string
-  getKeyframeCss: (ctx: Context) => string
-  getGlobalCss: (ctx: Context) => string
-  getCss: (options: FlattenedCssOptions) => string
-  getParserCss: (result: ParserResultType) => string | undefined
+export class Generator extends Context {
   messages: ReturnType<typeof getMessages>
   parserOptions: ParserOptions
+
+  constructor(conf: ConfigResultWithHooks) {
+    super(conf)
+    this.parserOptions = getParserOptions(this)
+    this.messages = getMessages(this)
+  }
+
+  getArtifacts(ids?: ArtifactId[] | undefined) {
+    return generateArtifacts(this, ids)
+  }
+
+  appendCss(type: CssArtifactType) {
+    match(type)
+      .with('preflight', () => generateResetCss(this))
+      .with('tokens', () => generateTokenCss(this))
+      .with('static', () => generateStaticCss(this))
+      .with('global', () => generateGlobalCss(this))
+      .with('keyframes', () => generateKeyframeCss(this))
+      .otherwise(() => {
+        throw new Error(`Unknown css artifact type <${type}>`)
+      })
+  }
+
+  appendLayerParams() {
+    this.stylesheet.prepend(this.layers.params)
+  }
+
+  appendBaselineCss() {
+    if (this.config.preflight) this.appendCss('preflight')
+    if (!this.tokens.isEmpty) this.appendCss('tokens')
+    if (this.config.staticCss) this.appendCss('static')
+    this.appendCss('global')
+    if (this.config.theme?.keyframes) this.appendCss('keyframes')
+  }
+
+  appendParserCss(...results: Array<ParserResultType | undefined>) {
+    results.forEach((result) => {
+      if (!result) return
+      generateParserCss(this, result)
+    })
+  }
+
+  getCss() {
+    return this.stylesheet.toCss({
+      optimize: true,
+      minify: this.config.minify,
+    })
+  }
 }

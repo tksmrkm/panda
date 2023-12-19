@@ -372,8 +372,8 @@ import { button } from '../styled-system/recipes'
 function App() {
   return (
     <div>
-      <button class={button()}>Click me</button>
-      <button class={button({ shape: 'circle' })}>Click me</button>
+      <button className={button()}>Click me</button>
+      <button className={button({ shape: 'circle' })}>Click me</button>
     </div>
   )
 }
@@ -415,7 +415,7 @@ import { button } from '../styled-system/recipes'
 function App() {
   return (
     <div>
-      <button class={button({ size: { base: 'sm', md: 'lg' } })}>
+      <button className={button({ size: { base: 'sm', md: 'lg' } })}>
         Click me
       </button>
     </div>
@@ -643,6 +643,12 @@ const button = defineRecipe({
   ]
 })
 ```
+
+## Static CSS
+
+Panda provides a way to generate `static CSS` for your recipes. This is useful when you want to generate CSS for a recipe without using the recipe in your code or if you use dynamic styling that Panda can't keep track of.
+
+More information about static CSS can be found [here](/docs/guides/static.md#generating-recipes).
 
 ## Should I use atomic or config recipes ?
 

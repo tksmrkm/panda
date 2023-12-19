@@ -1,11 +1,10 @@
+import { findConfigFile } from '@pandacss/config'
 import { colors, logger } from '@pandacss/logger'
 import {
+  PandaContext,
   analyzeTokens,
-  bundleCss,
-  bundleMinimalFilesCss,
   debugFiles,
   emitArtifacts,
-  writeAndBundleCssChunks,
   generate,
   loadConfigAndCreateContext,
   setupConfig,
@@ -13,17 +12,14 @@ import {
   setupPostcss,
   shipFiles,
   writeAnalyzeJSON,
-  type PandaContext,
-  generateCssArtifactOfType,
   type CssArtifactType,
 } from '@pandacss/node'
-import { findConfigFile } from '@pandacss/config'
 import { compact } from '@pandacss/shared'
 import { cac } from 'cac'
 import { join, resolve } from 'pathe'
 import { debounce } from 'perfect-debounce'
 import { version } from '../package.json'
-import { cliInit } from './cli-init'
+import { interactive } from './interactive'
 import type {
   AnalyzeCommandFlags,
   CodegenCommandFlags,
@@ -53,14 +49,14 @@ export async function main() {
     .option('--jsx-framework <framework>', 'The jsx framework to use')
     .option('--syntax <syntax>', 'The css syntax preference')
     .option('--strict-tokens', 'Using strictTokens: true')
-    .action(async (_flags: Partial<InitCommandFlags> = {}) => {
+    .action(async (initFlags: Partial<InitCommandFlags> = {}) => {
       let options = {}
 
-      if (_flags.interactive) {
-        options = await cliInit()
+      if (initFlags.interactive) {
+        options = await interactive()
       }
 
-      const flags = { ..._flags, ...options }
+      const flags = { ...initFlags, ...options }
       const { force, postcss, silent, gitignore, outExtension, jsxFramework, config: configPath, syntax } = flags
 
       const cwd = resolve(flags.cwd ?? '')
@@ -108,27 +104,25 @@ export async function main() {
         logger.level = 'silent'
       }
 
-      function loadContext() {
-        return loadConfigAndCreateContext({ cwd, config: { clean }, configPath })
-      }
-
-      let ctx = await loadContext()
+      const ctx = await loadConfigAndCreateContext({ cwd, config: { clean }, configPath })
 
       const { msg } = await emitArtifacts(ctx)
       logger.log(msg)
 
       if (watch) {
         logger.info('ctx:watch', ctx.messages.configWatch())
+
         const watcher = ctx.runtime.fs.watch({
-          include: ctx.dependencies,
+          include: ctx.conf.dependencies,
           cwd,
           poll,
         })
 
         const onChange = debounce(async () => {
           logger.info('ctx:change', 'config changed, rebuilding...')
-          ctx = await loadContext()
-          await emitArtifacts(ctx)
+          // in the codegen, we don't need to create a new panda context
+          const affecteds = await ctx.diff.reloadConfigAndRefreshContext()
+          await emitArtifacts(ctx, Array.from(affecteds.artifacts))
           logger.info('ctx:updated', 'config rebuilt ✅')
         })
 
@@ -143,7 +137,7 @@ export async function main() {
     )
     .option('--silent', "Don't print any logs")
     .option('-m, --minify', 'Minify generated code')
-    .option('--clean', 'Clean the chunks before generating')
+    .option('--clean', 'Clean the output before generating')
     .option('-c, --config <path>', 'Path to panda config file')
     .option('-w, --watch', 'Watch files and rebuild')
     .option('--minimal', 'Do not include CSS generation for theme tokens, preflight, keyframes, static and global css')
@@ -154,58 +148,70 @@ export async function main() {
       const { silent, clean, config: configPath, outfile, watch, poll, minify, minimal } = flags
 
       const cwd = resolve(flags.cwd ?? '')
+
       const cssArtifact = ['preflight', 'tokens', 'static', 'global', 'keyframes'].find(
         (type) => type === maybeGlob,
       ) as CssArtifactType | undefined
+
       const glob = cssArtifact ? undefined : maybeGlob
 
       if (silent) {
         logger.level = 'silent'
       }
 
-      function loadContext() {
-        return loadConfigAndCreateContext({
-          cwd,
-          config: {
-            clean,
-            minify,
-            optimize: true,
-            ...(glob ? { include: [glob] } : undefined),
-          },
-          configPath,
-        })
+      const overrideConfig = {
+        clean,
+        minify,
+        optimize: true,
+        ...(glob ? { include: [glob] } : undefined),
       }
 
-      let ctx = await loadContext()
+      let ctx = await loadConfigAndCreateContext({
+        cwd,
+        config: overrideConfig,
+        configPath,
+      })
+
+      const ensureFile = (ctx: PandaContext, file: string) => {
+        const outPath = resolve(cwd, file)
+        const dirname = ctx.runtime.path.dirname(outPath)
+        ctx.runtime.fs.ensureDirSync(dirname)
+      }
 
       const cssgen = async (ctx: PandaContext) => {
-        if (outfile) {
-          const outPath = resolve(cwd, outfile)
-          const dirname = ctx.runtime.path.dirname(outPath)
-          ctx.runtime.fs.ensureDirSync(dirname)
+        //
+        if (cssArtifact) {
+          //
+          ctx.appendCss(cssArtifact)
 
-          if (cssArtifact) {
-            const { msg } = await generateCssArtifactOfType(ctx, cssArtifact, outfile)
-            logger.info('css:emit', msg)
-            return
-          }
-
-          if (minimal) {
-            const { msg } = await bundleMinimalFilesCss(ctx, outPath)
-            logger.info('css:emit', msg)
+          if (outfile) {
+            ensureFile(ctx, outfile)
+            ctx.runtime.fs.writeFileSync(outfile, ctx.getCss())
           } else {
-            const { msg } = await bundleCss(ctx, outPath)
-            logger.info('css:emit', msg)
+            await ctx.writeCss()
           }
+
+          const msg = ctx.messages.cssArtifactComplete(cssArtifact)
+          logger.info('css:emit:artifact', msg)
           //
         } else {
-          if (cssArtifact) {
-            logger.warn('cssgen:warn', 'Cannot generate css artifact without an outfile')
+          //
+          if (!minimal) {
+            ctx.appendLayerParams()
+            ctx.appendBaselineCss()
           }
 
-          //
-          const { msg } = await writeAndBundleCssChunks(ctx)
-          logger.info('css:emit', msg)
+          const files = ctx.appendFilesCss()
+
+          if (outfile) {
+            ensureFile(ctx, outfile)
+            ctx.runtime.fs.writeFileSync(outfile, ctx.getCss())
+          } else {
+            await ctx.writeCss()
+          }
+
+          const msg = ctx.messages.buildComplete(files.length)
+          logger.info('css:emit:out', msg)
         }
       }
 
@@ -213,13 +219,15 @@ export async function main() {
 
       if (watch) {
         logger.info('ctx:watch', ctx.messages.configWatch())
-        const configWatcher = ctx.runtime.fs.watch({ include: ctx.dependencies, cwd, poll })
+        const configWatcher = ctx.runtime.fs.watch({ include: ctx.conf.dependencies, cwd, poll })
 
         configWatcher.on(
           'change',
           debounce(async () => {
             logger.info('ctx:change', 'config changed, rebuilding...')
-            ctx = await loadContext()
+            await ctx.diff.reloadConfigAndRefreshContext((conf) => {
+              ctx = new PandaContext({ ...conf, hooks: ctx.hooks })
+            })
             await cssgen(ctx)
             logger.info('ctx:updated', 'config rebuilt ✅')
           }),
@@ -299,7 +307,15 @@ export async function main() {
         host,
       }
 
-      const studio = require('@pandacss/studio')
+      let studio: any
+
+      try {
+        const studioPath = require.resolve('@pandacss/studio', { paths: [cwd] })
+        studio = require(studioPath)
+      } catch (error) {
+        logger.error('studio', error)
+        throw new Error("You need to install '@pandacss/studio' to use this command")
+      }
 
       if (preview) {
         await studio.previewStudio(buildOpts)
@@ -389,8 +405,10 @@ export async function main() {
     .option('-m, --minify', 'Minify generated JSON file')
     .option('-c, --config <path>', 'Path to panda config file')
     .option('--cwd <cwd>', 'Current working directory', { default: cwd })
+    .option('-w, --watch', 'Watch files and rebuild')
+    .option('-p, --poll', 'Use polling instead of filesystem events when watching')
     .action(async (maybeGlob?: string, flags: ShipCommandFlags = {}) => {
-      const { silent, outfile: outfileFlag, minify, config: configPath } = flags
+      const { silent, outfile: outfileFlag, minify, config: configPath, watch, poll } = flags
 
       const cwd = resolve(flags.cwd!)
 
@@ -398,7 +416,7 @@ export async function main() {
         logger.level = 'silent'
       }
 
-      const ctx = await loadConfigAndCreateContext({
+      let ctx = await loadConfigAndCreateContext({
         cwd,
         config: maybeGlob ? { include: [maybeGlob] } : undefined,
         configPath,
@@ -411,6 +429,42 @@ export async function main() {
       }
 
       await shipFiles(ctx, outfile)
+
+      if (watch) {
+        logger.info('ctx:watch', ctx.messages.configWatch())
+        const configWatcher = ctx.runtime.fs.watch({ include: ctx.conf.dependencies, cwd, poll })
+
+        configWatcher.on(
+          'change',
+          debounce(async () => {
+            logger.info('ctx:change', 'config changed, rebuilding...')
+            await ctx.diff.reloadConfigAndRefreshContext((conf) => {
+              ctx = new PandaContext({ ...conf, hooks: ctx.hooks })
+            })
+            await shipFiles(ctx, outfile)
+            logger.info('ctx:updated', 'config rebuilt ✅')
+          }),
+        )
+
+        const contentWatcher = ctx.runtime.fs.watch(ctx.config)
+        contentWatcher.on(
+          'all',
+          debounce(async (event, file) => {
+            logger.info(`file:${event}`, file)
+            if (event === 'unlink') {
+              ctx.project.removeSourceFile(ctx.runtime.path.abs(cwd, file))
+            } else if (event === 'change') {
+              ctx.project.reloadSourceFile(file)
+              await shipFiles(ctx, outfile)
+            } else if (event === 'add') {
+              ctx.project.createSourceFile(file)
+              await shipFiles(ctx, outfile)
+            }
+          }),
+        )
+
+        logger.info('ctx:watch', ctx.messages.watch())
+      }
     })
 
   cli.help()
