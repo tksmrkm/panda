@@ -24,7 +24,7 @@ function App() {
 
   return (
     <div className={stack({ padding: '40px', align: 'stretch', color: 'red.300' })}>
-      <section className={css({ padding: '5', borderWidth: '1px', debug: true })}>
+      <section className={css({ padding: '5', borderWidth: '1px' })}>
         <p className={css({ fontWeight: 'semibold', mb: '2' })}>CSS - Function</p>
         <div className={css({ maxWidth: '840px', marginX: 'auto', textAlign: 'center' })}>
           <div>
