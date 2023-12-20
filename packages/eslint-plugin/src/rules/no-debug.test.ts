@@ -8,6 +8,8 @@ const valid = [
 
   // TODO Ensure that it's only dissalowed within panda styles
   // { code: 'const randomFunc = f({ debug: true })' },
+
+  // TODO Ensure that it's only dissalowed within panda components
   //   {
   //     code: '<NonPandaComponent debug={true} />',
   //     parserOptions: {
@@ -28,6 +30,7 @@ const invalid = [
       },
     ],
   },
+
   {
     code: `import { Circle } from './panda/jsx'
     <Circle debug={true} />`,
