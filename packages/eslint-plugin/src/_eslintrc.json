@@ -4,7 +4,6 @@
     "@pandacss/eslint-plugin"
   ],
   "rules": {
-    "@pandacss/my-first-rule": "error",
     "@pandacss/no-debug": "error"
   }
 }
