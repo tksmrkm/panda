@@ -19,22 +19,14 @@ const rule: Rule = createRule({
     const _codeStr = context.sourceCode.text
 
     return {
-      // esquery way
-      'VariableDeclarator[id.type="Identifier"][id.name!="bla"]': (node) => {
-        console.log('node', node)
-        context.report({
-          node,
-          messageId: 'variableMessage',
-        })
+      VariableDeclarator: (node) => {
+        if (node.id.type === 'Identifier' && node.id.name !== 'bla') {
+          context.report({
+            node,
+            messageId: 'variableMessage',
+          })
+        }
       },
-      // VariableDeclarator: (node) => {
-      //   if (node.id.type === 'Identifier' && node.id.name !== 'bla') {
-      //     context.report({
-      //       node,
-      //       messageId: 'variableMessage',
-      //     })
-      //   }
-      // },
     }
   },
 })
