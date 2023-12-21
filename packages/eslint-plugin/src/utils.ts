@@ -1,5 +1,4 @@
 import { ESLintUtils } from '@typescript-eslint/utils'
-export { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 // TODO Document rules
 export const createRule = ESLintUtils.RuleCreator(
