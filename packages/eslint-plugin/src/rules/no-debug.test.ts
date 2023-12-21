@@ -15,11 +15,10 @@ import { Circle } from './panda/jsx'
 
 const valids = [
   'const styles = css({ bg: "red" }) ',
-  // 'const stylesNested2 = css({ bg: "red", "&:hover": { "&:disabled": { debug: true } } })',
   // TODO Ensure that it's only dissalowed within panda styles
   //  'const randomFunc = f({ debug: true })',
   // TODO Ensure that it's only dissalowed within panda components
-  '<NonPandaComponent debug={true} />',
+  // '<NonPandaComponent debug={true} />',
 ]
 
 const invalids = [

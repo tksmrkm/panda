@@ -1,6 +1,18 @@
-import { createRule, type Rule } from '../utils'
+import { AST_NODE_TYPES, createRule, type Rule } from '../utils'
 
 export const RULE_NAME = 'no-debug'
+
+function hasAncestorOfType(node: any, ancestorType: any) {
+  if (!node || !node.parent) {
+    return false
+  }
+
+  if (node.parent.type === ancestorType) {
+    return true
+  }
+
+  return hasAncestorOfType(node.parent, ancestorType)
+}
 
 const rule: Rule = createRule({
   name: RULE_NAME,
@@ -10,7 +22,6 @@ const rule: Rule = createRule({
     },
     messages: {
       debug: 'Remove the debug utility.',
-      debugProp: 'Remove the debug prop.',
     },
     type: 'suggestion',
     schema: [],
@@ -23,7 +34,7 @@ const rule: Rule = createRule({
         if (node.parent.type === 'JSXAttribute' && node.name === 'debug') {
           context.report({
             node,
-            messageId: 'debugProp',
+            messageId: 'debug',
           })
         }
       },
@@ -33,7 +44,9 @@ const rule: Rule = createRule({
           node.key.type === 'Identifier' &&
           node.key.name === 'debug' &&
           node.parent.type === 'ObjectExpression' &&
-          node.parent.parent.type === 'CallExpression'
+          // TODO Object could be JSX prop value i.e css or pseudo
+          //
+          hasAncestorOfType(node, AST_NODE_TYPES.CallExpression)
           // TODO Something like this to limit to panda methods
           // node.parent.parent.callee.type === 'Identifier' && node.parent.parent.callee.name === 'css'
         ) {
