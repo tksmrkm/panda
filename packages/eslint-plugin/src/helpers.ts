@@ -31,7 +31,7 @@ export const getAncestorOfType = <
     return node.parent as Node
   }
 
-  return hasAncestorOfType(node.parent, ancestorType) as false | Node
+  return getAncestorOfType(node.parent, ancestorType) as false | Node
 }
 
 export const hasAncestorOfType = <T extends TSESTree.Node, A extends AST_NODE_TYPES>(node: T, ancestorType: A) => {
