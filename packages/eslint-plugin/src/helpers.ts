@@ -1,18 +1,39 @@
 import { TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 export const isPandaAttribute = <T extends TSESTree.Node>(node: T) => {
-  // TODO Object could be in JSX prop value i.e css or pseudo
-  //
-  // TODO Something like this to limit to panda methods
-  // node.parent.parent.callee.type === 'Identifier' && node.parent.parent.callee.name === 'css'
-  if (!hasAncestorOfType(node, AST_NODE_TYPES.CallExpression)) return
+  const callAncestor = getAncestorOfType(node, AST_NODE_TYPES.CallExpression)
+
+  if (!callAncestor) {
+    // Object could be in JSX prop value i.e css or pseudo
+    const jsxExprAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXExpressionContainer)
+    const jsxAttrAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXAttribute)
+
+    if (!jsxExprAncestor || !jsxAttrAncestor) return
+    if (!isPandaProp(jsxAttrAncestor)) return
+    if (!isInPandaProp(jsxAttrAncestor)) return
+
+    return true
+  }
+
+  if (callAncestor.callee.type !== AST_NODE_TYPES.Identifier) return
+  const caller = callAncestor.callee.name
+
+  // TODO check imports and ensure that it's only dissalowed within panda styles
+  if (caller !== 'css') return
 
   return true
 }
 
 export const isPandaProp = <T extends TSESTree.Node>(node: T) => {
-  // TODO limit only to panda components
-  return !!node
+  const jsxAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXOpeningElement)
+  if (!jsxAncestor || jsxAncestor.name.type !== AST_NODE_TYPES.JSXIdentifier) return
+
+  const jsxName = jsxAncestor.name.name
+
+  // TODO limit only to panda components i.e. imports and created with styled
+  if (jsxName !== 'Circle' && jsxName !== 'PandaComp') return
+
+  return true
 }
 
 export const getAncestorOfType = <
@@ -36,4 +57,9 @@ export const getAncestorOfType = <
 
 export const hasAncestorOfType = <T extends TSESTree.Node, A extends AST_NODE_TYPES>(node: T, ancestorType: A) => {
   return getAncestorOfType(node, ancestorType) !== false
+}
+
+export const isInPandaProp = (node: TSESTree.JSXAttribute) => {
+  // TODO check if attribute is in a panda prop and not just a random prop
+  return !!node
 }

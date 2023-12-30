@@ -19,7 +19,7 @@ const rule: Rule = createRule({
   create: (context) => {
     return {
       JSXIdentifier(node) {
-        if (node.parent.type === 'JSXAttribute' && node.name === 'debug' && isPandaProp(node)) {
+        if (node.name === 'debug' && isPandaProp(node)) {
           context.report({
             node,
             messageId: 'debug',
@@ -28,12 +28,7 @@ const rule: Rule = createRule({
       },
 
       Property(node) {
-        if (
-          node.key.type === 'Identifier' &&
-          node.key.name === 'debug' &&
-          node.parent.type === 'ObjectExpression' &&
-          isPandaAttribute(node)
-        ) {
+        if (node.key.type === 'Identifier' && node.key.name === 'debug' && isPandaAttribute(node)) {
           context.report({
             node,
             messageId: 'debug',
