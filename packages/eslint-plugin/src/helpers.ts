@@ -4,7 +4,7 @@ export const isPandaAttribute = <T extends TSESTree.Node>(node: T) => {
   const callAncestor = getAncestorOfType(node, AST_NODE_TYPES.CallExpression)
 
   if (!callAncestor) {
-    // Object could be in JSX prop value i.e css or pseudo
+    // Object could be in JSX prop value i.e css prop or a pseudo
     const jsxExprAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXExpressionContainer)
     const jsxAttrAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXAttribute)
 
@@ -15,13 +15,25 @@ export const isPandaAttribute = <T extends TSESTree.Node>(node: T) => {
     return true
   }
 
-  if (callAncestor.callee.type !== AST_NODE_TYPES.Identifier) return
-  const caller = callAncestor.callee.name
+  // css({...})
+  if (callAncestor.callee.type === AST_NODE_TYPES.Identifier) {
+    return isPandaFunction(callAncestor.callee.name)
+  }
 
+  // css.raw({...})
+  if (
+    callAncestor.callee.type === AST_NODE_TYPES.MemberExpression &&
+    callAncestor.callee.object.type === AST_NODE_TYPES.Identifier
+  ) {
+    return isPandaFunction(callAncestor.callee.object.name)
+  }
+
+  return
+}
+
+const isPandaFunction = (caller: string) => {
   // TODO check imports and ensure that it's only dissalowed within panda styles
-  if (caller !== 'css') return
-
-  return true
+  return caller === 'css'
 }
 
 export const isPandaProp = <T extends TSESTree.Node>(node: T) => {

@@ -15,6 +15,7 @@ import { styled, Circle } from './panda/jsx'
 
 const valids = [
   'const styles = css({ bg: "red" }) ',
+  'const styles = css.raw({ bg: "red" }) ',
   'const randomFunc = f({ debug: true })',
   '<NonPandaComponent debug={true} />',
   '<NonPandaComponent debug={true}>content</NonPandaComponent>',
@@ -22,6 +23,7 @@ const valids = [
 
 const invalids = [
   'const styles = css({ bg: "red", debug: true })',
+  'const styles = css.raw({ bg: "red", debug: true })',
   'const styles = css({ bg: "red", "&:hover": { debug: true } })',
   'const styles = css({ bg: "red", "&:hover": { "&:disabled": { debug: true } } })',
   '<Circle debug={true} />',
