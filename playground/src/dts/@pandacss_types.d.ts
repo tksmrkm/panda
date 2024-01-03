@@ -2,7 +2,6 @@
 
 import { HookKeys, Hookable } from 'hookable';
 import { TSConfig } from 'pkg-types';
-import * as ts_morph from 'ts-morph';
 import { Node } from 'ts-morph';
 
 export interface WithNode {
@@ -10400,6 +10399,10 @@ export interface SlotRecipeDefinition<S extends string, T extends SlotRecipeVari
 	 * The styles to apply when a combination of variants is selected.
 	 */
 	compoundVariants?: Pretty<SlotRecipeCompoundVariant<S, RecipeCompoundSelection<T>>>[];
+	/**
+	 * Variants to pre-generate, will be include in the final `config.staticCss`
+	 */
+	staticCss?: RecipeRule[];
 }
 export type SlotRecipeCreatorFn = <S extends string, T extends SlotRecipeVariantRecord<S>>(config: SlotRecipeDefinition<S, T>) => SlotRecipeRuntimeFn<S, T>;
 export type SlotRecipeConfig<S extends string = string, T extends SlotRecipeVariantRecord<S> = SlotRecipeVariantRecord<S>> = SlotRecipeDefinition<S, T> & RecipeConfigMeta;
@@ -10755,9 +10758,13 @@ export interface CodegenOptions {
 		className: boolean;
 	};
 	/**
-	 * Options for the generated typescript definitions.
+	 * Change generated typescript definitions to be more strict for property having a token or utility.
 	 */
 	strictTokens?: boolean;
+	/**
+	 * Change generated typescript definitions to be more strict for built-in CSS properties to only allow valid CSS values.
+	 */
+	strictPropertyValues?: boolean;
 	/**
 	 * Whether to update the .gitignore file.
 	 * @default 'true'
