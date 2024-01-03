@@ -1,5 +1,70 @@
 # @pandacss/dev
 
+## 0.24.1
+
+### Patch Changes
+
+- Updated dependencies [10e74428]
+  - @pandacss/node@0.24.1
+  - @pandacss/postcss@0.24.1
+  - @pandacss/config@0.24.1
+  - @pandacss/error@0.24.1
+  - @pandacss/logger@0.24.1
+  - @pandacss/preset-panda@0.24.1
+  - @pandacss/shared@0.24.1
+  - @pandacss/token-dictionary@0.24.1
+  - @pandacss/types@0.24.1
+
+## 0.24.0
+
+### Minor Changes
+
+- 63b3f1f2: - Boost style extraction performance by moving more work away from postcss
+  - Using a hashing strategy, the compiler only computes styles/classname once per style object and prop-value-condition
+    pair
+  - Fix regression in previous implementation that increased memory usage per extraction, leading to slower performance
+    over time
+
+### Patch Changes
+
+- Updated dependencies [63b3f1f2]
+- Updated dependencies [f6881022]
+  - @pandacss/node@0.24.0
+  - @pandacss/types@0.24.0
+  - @pandacss/postcss@0.24.0
+  - @pandacss/config@0.24.0
+  - @pandacss/preset-panda@0.24.0
+  - @pandacss/token-dictionary@0.24.0
+  - @pandacss/error@0.24.0
+  - @pandacss/logger@0.24.0
+  - @pandacss/shared@0.24.0
+
+## 0.23.0
+
+### Minor Changes
+
+- 1efc4277: Add support for emit-pkg command to emit just the `package.json` file with the required entrypoints. If an
+  existing `package.json` file is present, the `exports` field will be updated.
+
+  When setting up Panda in a monorepo, this command is useful in monorepo setups where you want the codegen to run only
+  in a dedicated workspace package.
+
+### Patch Changes
+
+- Updated dependencies [1ea7459c]
+- Updated dependencies [383b6d1b]
+- Updated dependencies [bd552b1f]
+- Updated dependencies [840ed66b]
+  - @pandacss/node@0.23.0
+  - @pandacss/logger@0.23.0
+  - @pandacss/postcss@0.23.0
+  - @pandacss/config@0.23.0
+  - @pandacss/error@0.23.0
+  - @pandacss/preset-panda@0.23.0
+  - @pandacss/shared@0.23.0
+  - @pandacss/token-dictionary@0.23.0
+  - @pandacss/types@0.23.0
+
 ## 0.22.1
 
 ### Patch Changes

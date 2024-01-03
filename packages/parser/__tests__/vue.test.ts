@@ -123,27 +123,27 @@ describe('extract Vue templates', () => {
       "@layer utilities {
         .text_green\\\\.400 {
           color: var(--colors-green-400)
-          }
+      }
 
         .text_purple\\\\.400 {
           color: var(--colors-purple-400)
-          }
+      }
 
         .text_red\\\\.500 {
           color: var(--colors-red-500)
-          }
+      }
 
         .text_red {
           color: red
-          }
+      }
 
         .font_bold {
           font-weight: var(--font-weights-bold)
-          }
+      }
 
         .text_green {
           color: green
-          }
+      }
       }"
     `)
   })
@@ -262,21 +262,9 @@ describe('extract Vue templates', () => {
 
     expect(result.css).toMatchInlineSnapshot(`
       "@layer utilities {
-        .text-style_overline {
-          text-style: overline
-          }
-
-        .text-style_h7 {
-          text-style: h7
-          }
-
-        .text-style_text {
-          text-style: text
-          }
-
         .text_grey\\\\.70 {
           color: grey.70
-          }
+      }
       }"
     `)
   })
@@ -387,27 +375,27 @@ describe('extract Vue templates', () => {
       "@layer utilities {
         .text_green\\\\.400 {
           color: var(--colors-green-400)
-          }
+      }
 
         .text_purple\\\\.400 {
           color: var(--colors-purple-400)
-          }
+      }
 
         .text_red\\\\.500 {
           color: var(--colors-red-500)
-          }
+      }
 
         .text_red {
           color: red
-          }
+      }
 
         .font_bold {
           font-weight: var(--font-weights-bold)
-          }
+      }
 
         .text_green {
           color: green
-          }
+      }
       }"
     `)
   })
@@ -528,27 +516,27 @@ describe('extract Vue templates', () => {
       "@layer utilities {
         .text_green\\\\.400 {
           color: var(--colors-green-400)
-          }
+      }
 
         .text_purple\\\\.400 {
           color: var(--colors-purple-400)
-          }
+      }
 
         .text_red\\\\.500 {
           color: var(--colors-red-500)
-          }
+      }
 
         .text_red {
           color: red
-          }
+      }
 
         .font_bold {
           font-weight: var(--font-weights-bold)
-          }
+      }
 
         .text_green {
           color: green
-          }
+      }
       }"
     `)
   })
