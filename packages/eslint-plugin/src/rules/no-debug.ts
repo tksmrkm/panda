@@ -1,4 +1,4 @@
-import { isPandaProp, isPandaAttribute } from '../helpers'
+import { isPandaProp, isPandaAttribute } from '../utils/helpers'
 import { createRule, type Rule } from '../utils'
 
 export const RULE_NAME = 'no-debug'
