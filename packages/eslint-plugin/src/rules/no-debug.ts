@@ -1,5 +1,5 @@
-import { isPandaProp, isPandaAttribute } from '../utils/helpers'
 import { createRule, type Rule } from '../utils'
+import { ruleListener } from '../utils/rule-listener'
 
 export const RULE_NAME = 'no-debug'
 
@@ -16,27 +16,25 @@ const rule: Rule = createRule({
     schema: [],
   },
   defaultOptions: [],
-  create: (context) => {
-    return {
-      JSXIdentifier(node) {
-        if (node.name === 'debug' && isPandaProp(node)) {
-          context.report({
-            node,
-            messageId: 'debug',
-          })
-        }
-      },
+  create: ruleListener({
+    attribute(node, context) {
+      if (node.key.name === 'debug') {
+        context.report({
+          node,
+          messageId: 'debug',
+        })
+      }
+    },
 
-      Property(node) {
-        if (node.key.type === 'Identifier' && node.key.name === 'debug' && isPandaAttribute(node)) {
-          context.report({
-            node,
-            messageId: 'debug',
-          })
-        }
-      },
-    }
-  },
+    prop(node, context) {
+      if (node.name === 'debug') {
+        context.report({
+          node,
+          messageId: 'debug',
+        })
+      }
+    },
+  }),
 })
 
 export default rule
