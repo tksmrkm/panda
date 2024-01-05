@@ -11,7 +11,7 @@ const rule: Rule = createRule({
       description: 'Prefer atomic properties over shorthand properties',
     },
     messages: {
-      atomic: 'Use atomic properties of `{{compound}}` instead. Prefer: \n{{atomics}}',
+      atomic: 'Use atomic properties of `{{composite}}` instead. Prefer: \n{{atomics}}',
     },
     type: 'suggestion',
     schema: [],
@@ -20,7 +20,7 @@ const rule: Rule = createRule({
   create(context) {
     const h = new PandaHelpers(context)
 
-    const resolveCompoundProperty = (name: string) => {
+    const resolveCompositeProperty = (name: string) => {
       if (Object.hasOwn(shorthandProperties, name)) return name
 
       const longhand = h.ctx.utility.resolveShorthand(name)
@@ -28,7 +28,7 @@ const rule: Rule = createRule({
     }
 
     const getReport = <N, M>(node: N, name: string) => {
-      const cpd = resolveCompoundProperty(name)!
+      const cpd = resolveCompositeProperty(name)!
 
       const atomics = shorthandProperties[cpd].map((name) => `\`${name}\``).join(',\n')
 
@@ -36,7 +36,7 @@ const rule: Rule = createRule({
         node,
         messageId: 'atomic' as M,
         data: {
-          compound: name,
+          composite: name,
           atomics,
         },
       }
@@ -44,7 +44,7 @@ const rule: Rule = createRule({
 
     return {
       JSXIdentifier(node) {
-        const cpd = resolveCompoundProperty(node.name)
+        const cpd = resolveCompositeProperty(node.name)
         if (!cpd) return
 
         if (!h.isPandaProp(node)) return
@@ -54,7 +54,7 @@ const rule: Rule = createRule({
 
       Property(node) {
         if (node.key.type !== 'Identifier') return
-        const cpd = resolveCompoundProperty(node.key.name)
+        const cpd = resolveCompositeProperty(node.key.name)
         if (!cpd) return
 
         if (!h.isPandaAttribute(node)) return
