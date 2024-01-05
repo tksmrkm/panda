@@ -31,12 +31,12 @@ const rule: Rule = createRule({
       return reverseCssMap.get(name)
     }
 
-    const getReport = <N, M>(node: N, name: string) => {
+    const getReport = <N>(node: N, name: string) => {
       const longhand = resolveLonghand(name)!
 
       return {
         node,
-        messageId: 'longhand' as M,
+        messageId: 'longhand' as const,
         data: {
           shorthand: name,
           longhand,

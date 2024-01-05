@@ -27,14 +27,14 @@ const rule: Rule = createRule({
       if (h.ctx.isValidProperty(longhand) && Object.hasOwn(shorthandProperties, longhand)) return longhand
     }
 
-    const getReport = <N, M>(node: N, name: string) => {
+    const getReport = <N>(node: N, name: string) => {
       const cpd = resolveCompositeProperty(name)!
 
       const atomics = shorthandProperties[cpd].map((name) => `\`${name}\``).join(',\n')
 
       return {
         node,
-        messageId: 'atomic' as M,
+        messageId: 'atomic' as const,
         data: {
           composite: name,
           atomics,
