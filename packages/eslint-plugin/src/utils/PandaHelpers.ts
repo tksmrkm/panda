@@ -82,4 +82,16 @@ export class PandaHelpers<T extends RuleContext<any, any>> {
   hasAncestorOfType<T extends TSESTree.Node, A extends AST_NODE_TYPES>(node: T, type: A) {
     return !!this.getAncestorOfType(node, type)
   }
+
+  resolveLonghand(name: string) {
+    const reverseShorthandsMap = new Map()
+
+    for (const [key, values] of this.ctx.utility.getPropShorthandsMap()) {
+      for (const value of values) {
+        reverseShorthandsMap.set(value, key)
+      }
+    }
+
+    return reverseShorthandsMap.get(name)
+  }
 }

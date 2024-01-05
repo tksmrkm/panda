@@ -19,9 +19,6 @@ const rule: Rule = createRule({
   create(context) {
     const h = new PandaHelpers(context)
 
-    // console.log('context.filename', context.getPhysicalFilename())
-    console.log('include', h.ctx.config.include)
-
     return {
       JSXIdentifier(node) {
         if (node.name !== 'debug') return

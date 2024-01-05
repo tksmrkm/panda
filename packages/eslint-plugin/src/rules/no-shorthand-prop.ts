@@ -19,20 +19,8 @@ const rule: Rule = createRule({
   create(context) {
     const h = new PandaHelpers(context)
 
-    const resolveLonghand = (name: string) => {
-      const reverseCssMap = new Map()
-
-      for (const [key, values] of h.ctx.utility.getPropShorthandsMap()) {
-        for (const value of values) {
-          reverseCssMap.set(value, key)
-        }
-      }
-
-      return reverseCssMap.get(name)
-    }
-
     const getReport = <N>(node: N, name: string) => {
-      const longhand = resolveLonghand(name)!
+      const longhand = h.resolveLonghand(name)!
 
       return {
         node,
@@ -46,7 +34,7 @@ const rule: Rule = createRule({
 
     return {
       JSXIdentifier(node) {
-        const longhand = resolveLonghand(node.name)
+        const longhand = h.resolveLonghand(node.name)
         if (!longhand) return
 
         if (!h.isPandaProp(node)) return
@@ -56,7 +44,7 @@ const rule: Rule = createRule({
 
       Property(node) {
         if (node.key.type !== 'Identifier') return
-        const longhand = resolveLonghand(node.key.name)
+        const longhand = h.resolveLonghand(node.key.name)
         if (!longhand) return
 
         if (!h.isPandaAttribute(node)) return
