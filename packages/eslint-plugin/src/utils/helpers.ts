@@ -1,3 +1,4 @@
+import type { PandaContext } from '@pandacss/node'
 import { TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 const isPandaFunction = (caller: string) => {
@@ -6,7 +7,8 @@ const isPandaFunction = (caller: string) => {
 }
 
 // Ensure a prop is in a panda component and it's a styled prop
-export const isPandaProp = <T extends TSESTree.Node>(node: T) => {
+export const isPandaProp = <T extends TSESTree.Node>(node: T, ctx: PandaContext) => {
+  if (node.type === 'JSXIdentifier' && !ctx.isValidProperty(node.name)) return
   const jsxAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXOpeningElement)
   if (!jsxAncestor || jsxAncestor.name.type !== AST_NODE_TYPES.JSXIdentifier) return
 
@@ -14,12 +16,11 @@ export const isPandaProp = <T extends TSESTree.Node>(node: T) => {
 
   // TODO limit only to panda components i.e. imports and created with styled
   if (jsxName !== 'Circle' && jsxName !== 'PandaComp') return
-  // TODO ensure that it's a styled props, not a random prop
 
   return true
 }
 
-export const isPandaAttribute = <T extends TSESTree.Node>(node: T) => {
+export const isPandaAttribute = <T extends TSESTree.Node>(node: T, ctx: PandaContext) => {
   const callAncestor = getAncestorOfType(node, AST_NODE_TYPES.CallExpression)
 
   // Object could be in JSX prop value i.e css prop or a pseudo
@@ -28,7 +29,7 @@ export const isPandaAttribute = <T extends TSESTree.Node>(node: T) => {
     const jsxAttrAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXAttribute)
 
     if (!jsxExprAncestor || !jsxAttrAncestor) return
-    if (!isPandaProp(jsxAttrAncestor)) return
+    if (!isPandaProp(jsxAttrAncestor.name, ctx)) return
 
     return true
   }

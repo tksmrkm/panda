@@ -331,6 +331,9 @@ importers:
 
   packages/eslint-plugin:
     dependencies:
+      '@pandacss/node':
+        specifier: workspace:*
+        version: link:../node
       '@pandacss/types':
         specifier: workspace:*
         version: link:../types

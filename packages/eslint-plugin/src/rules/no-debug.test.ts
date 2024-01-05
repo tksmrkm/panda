@@ -14,11 +14,13 @@ import { styled, Circle } from './panda/jsx'
 `
 
 const valids = [
-  'const styles = css({ bg: "red" }) ',
-  'const styles = css.raw({ bg: "red" }) ',
+  'const styles = { debug: true }',
+  'const styles = css({ bg: "red" })',
+  'const styles = css.raw({ bg: "red" })',
   'const randomFunc = f({ debug: true })',
   '<NonPandaComponent debug={true} />',
   '<NonPandaComponent debug={true}>content</NonPandaComponent>',
+  `const PandaComp = styled.div(div); <PandaComp someProp={{ debug: true }} />`,
 ]
 
 const invalids = [
@@ -26,11 +28,11 @@ const invalids = [
   'const styles = css.raw({ bg: "red", debug: true })',
   'const styles = css({ bg: "red", "&:hover": { debug: true } })',
   'const styles = css({ bg: "red", "&:hover": { "&:disabled": { debug: true } } })',
+  '<Circle debug />',
   '<Circle debug={true} />',
   '<Circle css={{ debug: true }} />',
   '<Circle css={{ "&:hover": { debug: true } }} />',
   '<Circle _hover={{ debug: true }} />',
-  `const PandaComp = styled.div(div); <PandaComp someProp={{ debug: true }} />`,
 ]
 
 ruleTester.run(RULE_NAME, rule as any, {

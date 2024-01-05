@@ -1,5 +1,6 @@
+import { isPandaAttribute, isPandaProp } from 'src/utils/helpers'
 import { createRule, type Rule } from '../utils'
-import { ruleListener } from '../utils/rule-listener'
+import { createContext } from '@pandacss/fixture'
 
 export const RULE_NAME = 'no-debug'
 
@@ -16,25 +17,31 @@ const rule: Rule = createRule({
     schema: [],
   },
   defaultOptions: [],
-  create: ruleListener({
-    attribute(node, context) {
-      if (node.key.name === 'debug') {
-        context.report({
-          node,
-          messageId: 'debug',
-        })
-      }
-    },
+  create(context) {
+    const ctx = createContext()
 
-    prop(node, context) {
-      if (node.name === 'debug') {
+    return {
+      JSXIdentifier(node) {
+        if (node.name !== 'debug') return
+        if (!isPandaProp(node, ctx)) return
+
         context.report({
           node,
           messageId: 'debug',
         })
-      }
-    },
-  }),
+      },
+
+      Property(node) {
+        if (node.key.type !== 'Identifier' || node.key.name !== 'debug') return
+        if (!isPandaAttribute(node, ctx)) return
+
+        context.report({
+          node,
+          messageId: 'debug',
+        })
+      },
+    }
+  },
 })
 
 export default rule
