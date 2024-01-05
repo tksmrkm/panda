@@ -29,6 +29,7 @@ const invalids = [
   '<Circle debug={true} />',
   '<Circle css={{ debug: true }} />',
   '<Circle css={{ "&:hover": { debug: true } }} />',
+  '<Circle _hover={{ debug: true }} />',
   `const PandaComp = styled.div(div); <PandaComp someProp={{ debug: true }} />`,
 ]
 
