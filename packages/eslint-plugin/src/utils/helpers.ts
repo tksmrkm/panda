@@ -7,8 +7,12 @@ const isPandaFunction = (caller: string) => {
 }
 
 // Ensure a prop is in a panda component and it's a styled prop
-export const isPandaProp = <T extends TSESTree.Node>(node: T, ctx: PandaContext) => {
-  if (node.type === 'JSXIdentifier' && !ctx.isValidProperty(node.name)) return
+export const isValidStyledProp = <T extends TSESTree.Node | string>(node: T, ctx: PandaContext) => {
+  if (typeof node === 'string') return
+  return node.type === 'JSXIdentifier' && ctx.isValidProperty(node.name)
+}
+
+export const isPandaProp = <T extends TSESTree.Node>(node: T) => {
   const jsxAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXOpeningElement)
   if (!jsxAncestor || jsxAncestor.name.type !== AST_NODE_TYPES.JSXIdentifier) return
 
@@ -29,7 +33,8 @@ export const isPandaAttribute = <T extends TSESTree.Node>(node: T, ctx: PandaCon
     const jsxAttrAncestor = getAncestorOfType(node, AST_NODE_TYPES.JSXAttribute)
 
     if (!jsxExprAncestor || !jsxAttrAncestor) return
-    if (!isPandaProp(jsxAttrAncestor.name, ctx)) return
+    if (!isPandaProp(jsxAttrAncestor.name)) return
+    if (!isValidStyledProp(jsxAttrAncestor.name, ctx)) return
 
     return true
   }
