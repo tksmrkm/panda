@@ -1,6 +1,5 @@
-import { isPandaAttribute, isPandaProp } from 'src/utils/helpers'
+import { PandaHelpers } from 'src/utils/PandaHelpers'
 import { createRule, type Rule } from '../utils'
-import { createContext } from '@pandacss/fixture'
 
 export const RULE_NAME = 'no-debug'
 
@@ -18,12 +17,12 @@ const rule: Rule = createRule({
   },
   defaultOptions: [],
   create(context) {
-    const ctx = createContext()
+    const h = new PandaHelpers(context)
 
     return {
       JSXIdentifier(node) {
         if (node.name !== 'debug') return
-        if (!isPandaProp(node)) return
+        if (!h.isPandaProp(node)) return
 
         context.report({
           node,
@@ -33,7 +32,7 @@ const rule: Rule = createRule({
 
       Property(node) {
         if (node.key.type !== 'Identifier' || node.key.name !== 'debug') return
-        if (!isPandaAttribute(node, ctx)) return
+        if (!h.isPandaAttribute(node)) return
 
         context.report({
           node,

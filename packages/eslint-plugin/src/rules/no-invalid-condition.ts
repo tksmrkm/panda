@@ -1,6 +1,5 @@
-import { isPandaAttribute, isPandaProp } from 'src/utils/helpers'
 import { createRule, type Rule } from '../utils'
-import { createContext } from '@pandacss/fixture'
+import { PandaHelpers } from 'src/utils/PandaHelpers'
 
 export const RULE_NAME = 'no-invalid-condition'
 
@@ -18,13 +17,13 @@ const rule: Rule = createRule({
   },
   defaultOptions: [],
   create(context) {
-    const ctx = createContext()
+    const h = new PandaHelpers(context)
 
     return {
       JSXIdentifier(node) {
         if (!/^_[a-zA-Z0-9_]+$/.test(node.name)) return
-        if (ctx.isValidProperty(node.name)) return
-        if (!isPandaProp(node)) return
+        if (h.ctx.isValidProperty(node.name)) return
+        if (!h.isPandaProp(node)) return
 
         context.report({
           node,
@@ -34,8 +33,8 @@ const rule: Rule = createRule({
 
       Property(node) {
         if (node.key.type !== 'Identifier' || !/^_[a-zA-Z0-9_]+$/.test(node.key.name)) return
-        if (ctx.isValidProperty(node.key.name)) return
-        if (!isPandaAttribute(node, ctx)) return
+        if (h.ctx.isValidProperty(node.key.name)) return
+        if (!h.isPandaAttribute(node)) return
 
         context.report({
           node,
