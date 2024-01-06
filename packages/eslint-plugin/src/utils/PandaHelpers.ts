@@ -12,14 +12,9 @@ export class PandaHelpers<T extends RuleContext<any, any>> {
     this.context = context
   }
 
-  isPandaFunction(caller: string) {
-    // TODO check imports and ensure that it's only dissalowed within panda styles
-    return caller === 'css'
-  }
-
-  isValidStyledProp<T extends TSESTree.Node | string>(node: T) {
-    if (typeof node === 'string') return
-    return node.type === 'JSXIdentifier' && this.ctx.isValidProperty(node.name)
+  isPandaImport<T extends TSESTree.Node>(node: T) {
+    // TODO ensure import is from panda
+    return !!node
   }
 
   isPandaProp<T extends TSESTree.Node>(node: T) {
@@ -32,6 +27,16 @@ export class PandaHelpers<T extends RuleContext<any, any>> {
     if (jsxName !== 'Circle' && jsxName !== 'PandaComp') return
 
     return true
+  }
+
+  isPandaFunction(caller: string) {
+    // TODO check imports and ensure that it's only dissalowed within panda styles
+    return caller === 'css'
+  }
+
+  isValidStyledProp<T extends TSESTree.Node | string>(node: T) {
+    if (typeof node === 'string') return
+    return node.type === 'JSXIdentifier' && this.ctx.isValidProperty(node.name)
   }
 
   isPandaAttribute<T extends TSESTree.Node>(node: T) {
