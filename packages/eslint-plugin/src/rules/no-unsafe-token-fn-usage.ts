@@ -40,7 +40,7 @@ const rule: Rule = createRule({
 
         if (node.value.type === 'Literal' && isUnsafeLiteral(node.value)) {
           context.report({
-            node,
+            node: node.value,
             messageId: 'noUnsafeTokenFnUsage',
           })
         }
@@ -49,14 +49,14 @@ const rule: Rule = createRule({
 
         if (node.value.expression.type === 'Literal' && isUnsafeLiteral(node.value.expression)) {
           context.report({
-            node,
+            node: node.value.expression,
             messageId: 'noUnsafeTokenFnUsage',
           })
         }
 
         if (node.value.expression.type === 'CallExpression' && isUnsafeCallExpression(node.value.expression)) {
           context.report({
-            node,
+            node: node.value.expression,
             messageId: 'noUnsafeTokenFnUsage',
           })
         }
@@ -68,7 +68,7 @@ const rule: Rule = createRule({
 
         if (isUnsafeCallExpression(node.value)) {
           context.report({
-            node,
+            node: node.value,
             messageId: 'noUnsafeTokenFnUsage',
           })
         }
@@ -76,7 +76,7 @@ const rule: Rule = createRule({
         if (node.value.type !== 'Literal') return
         if (isUnsafeLiteral(node.value)) {
           context.report({
-            node,
+            node: node.value,
             messageId: 'noUnsafeTokenFnUsage',
           })
         }
