@@ -1,5 +1,11 @@
 # @pandacss/shared
 
+## 0.25.1
+
+### Patch Changes
+
+- 657ca5da: Fix issue where `[]` escape hatch clashed with named grid lines
+
 ## 0.25.0
 
 ## 0.24.2
