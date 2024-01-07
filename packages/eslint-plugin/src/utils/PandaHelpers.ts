@@ -10,11 +10,7 @@ export class PandaHelpers<T extends RuleContext<any, any>> {
   constructor(context: T) {
     this.ctx = createContext()
     this.context = context
-  }
-
-  isPandaImport<T extends TSESTree.Node>(node: T) {
-    // TODO ensure import is from panda
-    return !!node
+    console.log('first', this.ctx.paths)
   }
 
   isPandaProp<T extends TSESTree.Node>(node: T) {
@@ -32,6 +28,11 @@ export class PandaHelpers<T extends RuleContext<any, any>> {
   isPandaFunction(caller: string) {
     // TODO check imports and ensure that it's only dissalowed within panda styles
     return caller === 'css'
+  }
+
+  isPandaImport<T extends TSESTree.Node>(node: T) {
+    // TODO ensure import is from panda
+    return !!node
   }
 
   isValidStyledProp<T extends TSESTree.Node | string>(node: T) {
